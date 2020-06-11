@@ -6,8 +6,6 @@
 //  Copyright © 2020 Derek Clarkson. All rights reserved.
 //
 
-/// Defines an enum that is used to provide the keus for settings.
-//public typealias SettingsKey = String
-
+/// Defines something that can be used as a key for a setting. Normally this would be an enum.
 public protocol SettingsKey: RawRepresentable where RawValue == String {}
 

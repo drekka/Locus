@@ -184,9 +184,9 @@
 			children = (
 				6C590BC02470083800548F23 /* Info.plist */,
 				6CEB059E248E31C900F31967 /* Integration */,
+				6CEB059A248CDA3A00F31967 /* LocusContainerTests.swift */,
 				6CE94C5D247FD40900584BAF /* Mocks */,
 				6C8C9C352486A5B70014BA27 /* Protocols */,
-				6CEB059A248CDA3A00F31967 /* LocusContainerTests.swift */,
 				6CE94C60247FE51300584BAF /* Stores */,
 			);
 			path = LocusTests;

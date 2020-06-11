@@ -12,7 +12,7 @@ struct MockStoreFactory: StoreFactory {
 
     init() {}
 
-    func createStore<V>(scope: Scope, parent: Store<V>) -> Store<V> {
+    func createStoreForSetting<V>(withKey key: String, scope: Scope, parent: Store<V>) -> Store<V> {
         return ChainedStore(parent: parent)
     }
 }

@@ -16,22 +16,22 @@ class UserDefaultsStoreFactoryTests: XCTestCase {
     let parent = MockStore<Int>(key: "abc", value: 5)
 
     func testCreateStoreWithReadonlyScope() {
-        let store = factory.createStore(scope: .readonly, parent: parent)
+        let store = factory.createStoreForSetting(withKey: "abc", scope: .readonly, parent: parent)
         expect(store).to(beAKindOf(UserDefaultsReadonlyStore<Int>.self))
     }
 
     func testCreateStoreWithWritableScope() {
-        let store = factory.createStore(scope: .writable, parent: parent)
+        let store = factory.createStoreForSetting(withKey: "abc", scope: .writable, parent: parent)
         expect(store).to(beAKindOf(UserDefaultsWritableStore<Int>.self))
     }
 
     func testCreateStoreWithReleaseLockedScope() {
-        let store = factory.createStore(scope: .releaseLocked, parent: parent)
+        let store = factory.createStoreForSetting(withKey: "abc", scope: .releaseLocked, parent: parent)
         expect(store) === parent
     }
 
     func testCreateStoreWithTransientScope() {
-        let store = factory.createStore(scope: .transient, parent: parent)
+        let store = factory.createStoreForSetting(withKey: "abc", scope: .transient, parent: parent)
         expect(store) === parent
     }
 }

@@ -6,6 +6,7 @@
 //  Copyright © 2020 Derek Clarkson. All rights reserved.
 //
 
+/// Not publically accessible. This store is alway the final store in the chain of stores for a setting.
 class DefaultStore<V>: Store<V> {
 
     private var settingKey: String

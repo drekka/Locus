@@ -6,20 +6,24 @@
 //  Copyright © 2020 Derek Clarkson. All rights reserved.
 //
 
+/// Enables a container to use subscripting to access setting values.
 public protocol SettingsSubscriptable {
+
+    /**
+     Sets or returns the value for a setting.
+
+     - parameter key: The key of the setting.
+     - returns: The value for the setting.
+     */
     subscript<T>(_ key:String) -> T { get set }
+
+    /**
+     Sets or returns the value for a setting.
+
+     This form takes a key that conforms to the SettingsKey protocol. Normally this would be an enum of settings keys.
+
+     - parameter key: The key of the setting.
+     - returns: The value for the setting.
+     */
     subscript<K, T>(_ Key: K) -> T where K: SettingsKey { get set }
-}
-
-public extension SettingsSubscriptable where Self: SettingsContainer {
-
-    subscript<T>(key: String) -> T {
-        get { return resolve(key) }
-        set { store(key: key, value: newValue) }
-    }
-
-    subscript<K, T>(key: K) -> T where K: SettingsKey {
-        get { return resolve(key.rawValue) }
-        set { store(key: key.rawValue, value: newValue) }
-    }
 }

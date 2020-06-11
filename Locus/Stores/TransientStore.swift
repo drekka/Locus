@@ -6,6 +6,11 @@
 //  Copyright © 2020 Derek Clarkson. All rights reserved.
 //
 
+/**
+ Transient stores are used when a setting is registered with a .transient scope.
+
+ Transient stores track updated values for a setting, but do not store it perminantly. So the next time the app is loaded, the transient value will be reset to the setting's default value. Transient settings are most useful for things where you want something to occur only once each time the app is started.
+ */
 class TransientStore<V>: ChainedStore<V> {
 
     private var transient: V?
@@ -19,5 +24,9 @@ class TransientStore<V>: ChainedStore<V> {
 
     override func store(newValue value: V) {
         transient = value
+    }
+
+    override func reset() {
+        transient = nil
     }
 }

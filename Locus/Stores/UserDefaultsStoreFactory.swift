@@ -6,11 +6,14 @@
 //  Copyright © 2020 Derek Clarkson. All rights reserved.
 //
 
+/**
+Creates stores for values that can read and write to the app's user defaults.
+*/
 public struct UserDefaultsStoreFactory: StoreFactory {
 
     public init() {}
 
-    public func createStore<V>(scope: Scope, parent: Store<V>) -> Store<V> {
+    public func createStoreForSetting<V>(withKey key: String, scope: Scope, parent: Store<V>) -> Store<V> {
         if scope == .writable {
             return UserDefaultsWritableStore(parent: parent)
         }

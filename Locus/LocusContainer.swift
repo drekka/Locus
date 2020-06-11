@@ -39,7 +39,7 @@ extension LocusContainer: SettingsContainer, SettingsSubscriptable {
         }
 
         stores[key] = storeFactories.reduce(DefaultStore(key: key, defaultValue: defaultValue)) { store, factory -> Store<T> in
-            return factory.createStore(scope: scope, parent: store)
+            return factory.createStoreForSetting(withKey:key, scope: scope, parent: store)
         }
     }
 
@@ -49,6 +49,10 @@ extension LocusContainer: SettingsContainer, SettingsSubscriptable {
 
     public func store<T>(key: String, value: T) {
         storeChain(forKey: key).update(withDefaultValue: value)
+    }
+
+    public func reset(key: String) {
+        (stores[key] as? Store<Any>)?.reset()
     }
 
     private func storeChain<T>(forKey key: String) -> Store<T> {

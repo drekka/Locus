@@ -6,8 +6,9 @@
 //  Copyright © 2020 Derek Clarkson. All rights reserved.
 //
 
-import Foundation
-
+/// Locus specific errors.
 enum LocusError: Error {
+
+    // Thrown when there is a problem casting a setting value.
     case cast
 }

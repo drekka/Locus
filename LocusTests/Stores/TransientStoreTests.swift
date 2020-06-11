@@ -30,4 +30,11 @@ class TransientStoreTests: XCTestCase {
         expect(self.parent.value) == 5
         expect(self.store.value) == 10
     }
+
+    func testReset() {
+        store.store(newValue: 10)
+        store.reset()
+        expect(self.parent.value) == 5
+        expect(self.store.value) == 5
+    }
 }

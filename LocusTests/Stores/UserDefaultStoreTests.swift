@@ -45,4 +45,12 @@ class UserDefaultStoreTests: XCTestCase {
         expect(UserDefaults.standard.integer(forKey: "abc")) == 10
         expect(self.parent.value) == 5
     }
+
+    func testReset() {
+        store = UserDefaultsReadonlyStore(parent: parent)
+        UserDefaults.standard.set(10, forKey: "abc")
+        store.reset()
+        expect(self.store.value) == 5
+    }
+
 }
