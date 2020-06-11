@@ -15,17 +15,17 @@ protocol TestSettings {
     var retries: Int { get }
 }
 
-enum TestSettingsKey: String, SettingsKey {
+enum TestRawRepresentable: String {
     case url = "test.url"
     case retries = "test.retries"
 }
 
 extension LocusContainer: TestSettings {
-    var url: String { return self[TestSettingsKey.url] }
-    var retries: Int { return self[TestSettingsKey.retries] }
+    var url: String { return self[TestRawRepresentable.url] }
+    var retries: Int { return self[TestRawRepresentable.retries] }
     func registerTestSettings(inContainer container: SettingsContainer) {
-        container.register(key: TestSettingsKey.url, scope: .readonly, defaultValue: "http://abc.com")
-        container.register(key: TestSettingsKey.retries, scope: .readonly, defaultValue: 5)
+        container.register(key: TestRawRepresentable.url, scope: .readonly, defaultValue: "http://abc.com")
+        container.register(key: TestRawRepresentable.retries, scope: .readonly, defaultValue: 5)
     }
 }
 

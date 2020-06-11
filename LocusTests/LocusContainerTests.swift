@@ -10,7 +10,7 @@ import XCTest
 @testable import Locus
 import Nimble
 
-enum TestKey: String, SettingsKey {
+enum TestKey: String {
     case def
 }
 
@@ -41,13 +41,13 @@ class LocusContainerTests: XCTestCase {
         expect(result) == 5
     }
 
-    func testRegisteringASettingWithSettingsKey() {
+    func testRegisteringASettingWithRawRepresentable() {
         settings.register(key: TestKey.def, scope: .readonly, defaultValue: 5)
         let result:Int = settings.resolve(TestKey.def)
         expect(result) == 5
     }
 
-    func testRegisteringASettingWithDefaultReadonlySettingsKey() {
+    func testRegisteringASettingWithDefaultReadonlyRawRepresentable() {
         settings.register(key: TestKey.def, defaultValue: 5)
         let result:Int = settings.resolve(TestKey.def)
         expect(result) == 5
@@ -64,7 +64,7 @@ class LocusContainerTests: XCTestCase {
         expect(result) == 5
     }
 
-    func testResolvingASettingWithSettingsKey() {
+    func testResolvingASettingWithRawRepresentable() {
         settings.register(key: TestKey.def, scope: .readonly, defaultValue: 5)
         let result:Int = settings.resolve(TestKey.def)
         expect(result) == 5
@@ -86,7 +86,7 @@ class LocusContainerTests: XCTestCase {
         expect(result) == 10
     }
 
-    func testStoreWithSettingsKey() {
+    func testStoreWithRawRepresentable() {
         settings.register(key: TestKey.def, scope: .writable, defaultValue: 5)
         settings.store(key: TestKey.def, value: 10)
         let result:Int = settings.resolve(TestKey.def)
@@ -99,7 +99,7 @@ class LocusContainerTests: XCTestCase {
         settings.reset(key: "abc")
     }
 
-    func testResettingASettingWithSettingsKey() {
+    func testResettingASettingWithRawRepresentable() {
         settings.register(key: TestKey.def, scope: .writable, defaultValue: 5)
         settings.store(key: TestKey.def, value: 10)
         settings.reset(key: TestKey.def)
@@ -112,7 +112,7 @@ class LocusContainerTests: XCTestCase {
         expect(self.settings["abc"] as Int) == 5
     }
 
-    func testSubscriptableWithSettingsKey() {
+    func testSubscriptableWithRawRepresentable() {
         settings.register(key: TestKey.def, scope: .writable, defaultValue: 5)
         expect(self.settings[TestKey.def] as Int) == 5
     }
@@ -123,7 +123,7 @@ class LocusContainerTests: XCTestCase {
         expect(self.settings["abc"] as Int) ==  10
     }
 
-    func testSubscriptableStoreWithSettingsKey() {
+    func testSubscriptableStoreWithRawRepresentable() {
         settings.register(key: TestKey.def, scope: .writable, defaultValue: 5)
         settings[TestKey.def] = 10
         expect(self.settings[TestKey.def] as Int) == 10

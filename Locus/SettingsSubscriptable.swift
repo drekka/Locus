@@ -20,10 +20,10 @@ public protocol SettingsSubscriptable {
     /**
      Sets or returns the value for a setting.
 
-     This form takes a key that conforms to the SettingsKey protocol. Normally this would be an enum of settings keys.
+     This form takes a key that conforms to the RawRepresentable protocol. Normally this would be an enum of settings keys.
 
      - parameter key: The key of the setting.
      - returns: The value for the setting.
      */
-    subscript<K, T>(_ Key: K) -> T where K: SettingsKey { get set }
+    subscript<K, T>(_ Key: K) -> T where K: RawRepresentable, K.RawValue == String { get set }
 }

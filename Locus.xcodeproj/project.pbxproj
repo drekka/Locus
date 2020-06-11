@@ -34,7 +34,6 @@
 		6CE7FF7E24766EA500A8E404 /* Nimble.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 6CE7FF7B24766E9300A8E404 /* Nimble.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		6CE94C5F247FD41F00584BAF /* MockStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE94C5E247FD41F00584BAF /* MockStore.swift */; };
 		6CE94C64247FE7CA00584BAF /* UserDefaultStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE94C63247FE7CA00584BAF /* UserDefaultStoreTests.swift */; };
-		6CE94C66247FFD4300584BAF /* Types.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CE94C65247FFD4300584BAF /* Types.swift */; };
 		6CEB0595248BC44700F31967 /* TransientStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CEB0594248BC44700F31967 /* TransientStoreTests.swift */; };
 		6CEB0597248BE03100F31967 /* TransientStoreFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CEB0596248BE03100F31967 /* TransientStoreFactoryTests.swift */; };
 		6CEB0599248CB78800F31967 /* UserDefaultsStoreFactoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CEB0598248CB78800F31967 /* UserDefaultsStoreFactoryTests.swift */; };
@@ -74,6 +73,7 @@
 		6C21C0E0248B4E8800EC3C92 /* TransientStoreFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransientStoreFactory.swift; sourceTree = "<group>"; };
 		6C21C0E2248B4E9F00EC3C92 /* UserDefaultsStoreFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsStoreFactory.swift; sourceTree = "<group>"; };
 		6C21C0E4248B50B900EC3C92 /* ChainedStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChainedStoreTests.swift; sourceTree = "<group>"; };
+		6C31C37924924712004BA7E6 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		6C339E19248226EC0081DF40 /* StoreFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreFactory.swift; sourceTree = "<group>"; };
 		6C339E1B24828F2F0081DF40 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
 		6C590BB02470083800548F23 /* Locus.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Locus.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -99,7 +99,6 @@
 		6CE94C5C247FCF3E00584BAF /* Locus.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Locus.xctestplan; sourceTree = "<group>"; };
 		6CE94C5E247FD41F00584BAF /* MockStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockStore.swift; sourceTree = "<group>"; };
 		6CE94C63247FE7CA00584BAF /* UserDefaultStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultStoreTests.swift; sourceTree = "<group>"; };
-		6CE94C65247FFD4300584BAF /* Types.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Types.swift; sourceTree = "<group>"; };
 		6CEB0594248BC44700F31967 /* TransientStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransientStoreTests.swift; sourceTree = "<group>"; };
 		6CEB0596248BE03100F31967 /* TransientStoreFactoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransientStoreFactoryTests.swift; sourceTree = "<group>"; };
 		6CEB0598248CB78800F31967 /* UserDefaultsStoreFactoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsStoreFactoryTests.swift; sourceTree = "<group>"; };
@@ -143,6 +142,7 @@
 		6C590BA62470083800548F23 = {
 			isa = PBXGroup;
 			children = (
+				6C31C37924924712004BA7E6 /* README.md */,
 				6CE94C5C247FCF3E00584BAF /* Locus.xctestplan */,
 				6C590BE424752AA400548F23 /* Cartfile */,
 				6C590BB22470083800548F23 /* Locus */,
@@ -174,7 +174,6 @@
 				6C590BD82473C62D00548F23 /* SettingsContainer.swift */,
 				6CEB05A3248E829100F31967 /* SettingsSubscriptable.swift */,
 				6C590BD124701BB800548F23 /* Stores */,
-				6CE94C65247FFD4300584BAF /* Types.swift */,
 			);
 			path = Locus;
 			sourceTree = "<group>";
@@ -392,7 +391,6 @@
 				6C21C0DD248B4E1F00EC3C92 /* DefaultStore.swift in Sources */,
 				6CEB05A4248E829100F31967 /* SettingsSubscriptable.swift in Sources */,
 				6C21C0DF248B4E3B00EC3C92 /* ChainedStore.swift in Sources */,
-				6CE94C66247FFD4300584BAF /* Types.swift in Sources */,
 				6C590BCE247008CF00548F23 /* Logging.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
