@@ -6,6 +6,6 @@
 //  Copyright © 2020 Derek Clarkson. All rights reserved.
 //
 
-protocol SettingsLoader {
+public protocol SettingsLoader {
     init(container: SettingsLoadable)
 }

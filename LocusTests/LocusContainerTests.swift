@@ -27,7 +27,7 @@ class LocusContainerTests: XCTestCase {
         expect(LocusContainer.shared).toNot(beNil())
         }
 
-    // MARK: - Settings functions
+    // MARK: - Registration functions
 
     func testRegisteringASetting() {
         settings.register(key: "abc", scope: .readonly, defaultValue: 5)
@@ -58,6 +58,8 @@ class LocusContainerTests: XCTestCase {
         expect(LocusContainer.shared.register(key: "abc", defaultValue: "def")).to(throwAssertion())
     }
 
+    // MARK: - Resolving
+
     func testResolvingASetting() {
         settings.register(key: "abc", scope: .readonly, defaultValue: 5)
         let result:Int = settings.resolve("abc")
@@ -79,6 +81,8 @@ class LocusContainerTests: XCTestCase {
         expect(_ = self.settings.resolve("abc") as String).to(throwAssertion())
     }
 
+    // MARK: - Storing
+
     func testStore() {
         settings.register(key: "abc", scope: .writable, defaultValue: 5)
         settings.store(key: "abc", value: 10)
@@ -93,6 +97,8 @@ class LocusContainerTests: XCTestCase {
         expect(result) == 10
     }
 
+    // MARK: - Resetting
+
     func testResettingASetting() {
         settings.register(key: "abc", scope: .writable, defaultValue: 5)
         settings.store(key: "abc", value: 10)
@@ -105,7 +111,7 @@ class LocusContainerTests: XCTestCase {
         settings.reset(key: TestKey.def)
     }
 
-    // Subscriptable
+    // MARK: - Subscriptable
 
     func testSubscriptableWithStringKey() {
         settings.register(key: "abc", scope: .writable, defaultValue: 5)

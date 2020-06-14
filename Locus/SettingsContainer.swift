@@ -12,7 +12,19 @@
 public protocol SettingsContainer: SettingsSubscriptable {
 
     /**
+     True by default. Auto-registers preferences found in the app's `Root.plist` and any child panes with the user defaults system.
+
+     This is automatically done prior to the accessing of any setting and before any loaders are run.
+     */
+    var registerAppSettings: Bool { get set }
+
+    /// True by default. If a user default is found by the `userDefaulldsLoader` that has not been registered then trigger an error.
+    var failOnMissingUserDefaults: Bool { get set }
+    
+    /**
      Registers settings with the container using one or more closures containing the register calls.
+
+     Note that in addition to closures you can also pass function references as long as the function accepts a single argument of `SettingContainer`.
 
      - parameter using: A list of closures to execute.
      - parameter container: The container to register the settings with.
@@ -38,6 +50,11 @@ public protocol SettingsContainer: SettingsSubscriptable {
      - parameter defaultValue: The default value for the setting.
      */
     func register<K, T>(key: K, scope: Scope, defaultValue: T) where K: RawRepresentable, K.RawValue == String
+
+    /**
+     Loads setting values from the passed loaders.
+     */
+    func load(fromLoaders loaders: SettingsLoader...)
 
     /**
      Resolves a setting and returns the current value for it.

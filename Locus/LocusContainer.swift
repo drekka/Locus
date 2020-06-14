@@ -8,6 +8,9 @@
 
 public class LocusContainer {
 
+    public var registerAppSettings: Bool = true
+    public var failOnMissingUserDefaults: Bool = true
+
     ///
     public static var shared: SettingsContainer = {
         locusLog("Starting singleton container...")
@@ -35,12 +38,15 @@ extension LocusContainer: SettingsContainer, SettingsSubscriptable {
     public func register<T>(key: String, scope: Scope, defaultValue: T) {
 
         guard !stores.keys.contains(key) else {
-            fatalError("Key " + key + " already registered")
+            locusFatalError("Key " + key + " already registered")
         }
 
         stores[key] = storeFactories.reduce(DefaultStore(key: key, defaultValue: defaultValue)) { store, factory -> Store<T> in
             return factory.createStoreForSetting(withKey:key, scope: scope, parent: store)
         }
+    }
+
+    public func load(fromLoaders loaders: SettingsLoader...) {
     }
 
     public func resolve<T>(_ key: String) -> T {
@@ -60,8 +66,8 @@ extension LocusContainer: SettingsContainer, SettingsSubscriptable {
             if let castStore = store as? Store<T> {
                 return castStore
             }
-            fatalError("Cast failure. Cannot cast a " + String(describing: type(of: store)) + " to a Store<" + String(describing: T.self) + ">.")
+            locusFatalError("Cast failure. Cannot cast a " + String(describing: type(of: store)) + " to a Store<" + String(describing: T.self) + ">.")
         }
-        fatalError("Unknown key: " + key)
+        locusFatalError("Unknown key: " + key)
     }
 }

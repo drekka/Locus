@@ -29,6 +29,6 @@ public extension Castable {
             locusLog("Resolving %@ -> %@", key, String(describing: value))
             return castValue
         }
-        fatalError("Unable to cast value for '" + key + "'")
+        locusFatalError("Unable to cast value for '" + key + "'")
     }
 }

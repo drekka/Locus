@@ -9,9 +9,13 @@
 import os
 
 func locusLog(_ template: String, _ args: CVarArg...) {
-    locusLog(template, args)
+    locusLog(template, arguments: args)
 }
 
-func locusLog(_ template: String, _ arguments: [CVarArg]) {
+func locusLog(_ template: String, arguments: [CVarArg]) {
     os_log(.debug, "🧩 %@", String(format: template, arguments: arguments))
+}
+
+public func locusFatalError(_ message: @autoclosure () -> String = String(), file: StaticString = #file, line: UInt = #line) -> Never {
+    fatalError("🧨  " + message(), file: file, line: line)
 }
