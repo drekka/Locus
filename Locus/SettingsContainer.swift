@@ -14,12 +14,16 @@ public protocol SettingsContainer: SettingsSubscriptable {
     /**
      True by default. Auto-registers preferences found in the app's `Root.plist` and any child panes with the user defaults system.
 
-     This is automatically done prior to the accessing of any setting and before any loaders are run.
+     When on, executes the `UserDefaultsRegistrar` to scan the plists in the settings bundle and register any defaults found there. By default the keys are validated against the list of
+     registered settings key and a fatal thrown if any are not found. This functionality is automatically triggered the first time any setting is accessed.
      */
     var registerAppSettings: Bool { get set }
 
-    /// True by default. If a user default is found by the `userDefaulldsLoader` that has not been registered then trigger an error.
-    var failOnMissingUserDefaults: Bool { get set }
+    /// Override which allows settings plist files to be located in a bundle other than the main bundle.
+    var appSettingsBundle: Bundle { get set }
+
+    /// True by default. If a user default is found by the `UserDefaultsRegistrar` that has not been registered, then a `fatalError()` will be thrown.
+    var validateAppSettingsKeys: Bool { get set }
     
     /**
      Registers settings with the container using one or more closures containing the register calls.
@@ -54,7 +58,7 @@ public protocol SettingsContainer: SettingsSubscriptable {
     /**
      Loads setting values from the passed loaders.
      */
-    func load(fromLoaders loaders: SettingsLoader...)
+    func load(fromLoaders loaders: SettingsLoader..., completion: @escaping () -> Void)
 
     /**
      Resolves a setting and returns the current value for it.

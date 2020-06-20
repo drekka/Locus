@@ -6,14 +6,30 @@
 //  Copyright © 2020 Derek Clarkson. All rights reserved.
 //
 
+import os
+
 public class LocusContainer {
 
-    public var registerAppSettings: Bool = true
-    public var failOnMissingUserDefaults: Bool = true
+    /// Enables or disables the auto-registering of user defaults defaultValues from settings plists.
+    /// On by default.
+    public var registerAppSettings = true {
+        didSet {
+            appSettingsRegistered = !registerAppSettings
+        }
+    }
+
+    /// If true, causes Locus to fatal if a user default is found that has not been registered.
+    public var validateAppSettingsKeys = true
+
+    // An override that allows for the searching of app settings in a different bundle.
+    public var appSettingsBundle = Bundle.main
+
+    // Go true when the UserDefaultsRegistrar has been run.
+    private var appSettingsRegistered = false
 
     ///
     public static var shared: SettingsContainer = {
-        locusLog("Starting singleton container...")
+        os_log("%@Starting singleton container...", type: .debug, logPrefix)
         return LocusContainer()
     }()
 
@@ -27,6 +43,26 @@ public class LocusContainer {
     public convenience init(storeFactories: StoreFactory...) {
         self.init(storeFactories: storeFactories)
     }
+
+    fileprivate func registerUserDefaultValues() {
+
+        // Return if told not to register user defaults.
+        if appSettingsRegistered { return }
+
+        // Register and validate if required.
+        os_log("%@Registering application settings in user defaults...", type: .debug, logPrefix)
+        let registeredDefaults = UserDefaultsRegistrar().register(bundle: appSettingsBundle)
+        if validateAppSettingsKeys {
+            os_log("%@Validating application settings found in user defaults...", type: .debug, logPrefix)
+            let knownKeys = stores.keys
+            registeredDefaults.keys.forEach { key in
+                if !knownKeys.contains(key) {
+                    fatalError("User default with key \(key) not registered!")
+                }
+            }
+        }
+        appSettingsRegistered = true
+    }
 }
 
 extension LocusContainer: SettingsContainer, SettingsSubscriptable {
@@ -38,7 +74,7 @@ extension LocusContainer: SettingsContainer, SettingsSubscriptable {
     public func register<T>(key: String, scope: Scope, defaultValue: T) {
 
         guard !stores.keys.contains(key) else {
-            locusFatalError("Key " + key + " already registered")
+            fatalError(fatalPrefix + "Key " + key + " already registered")
         }
 
         stores[key] = storeFactories.reduce(DefaultStore(key: key, defaultValue: defaultValue)) { store, factory -> Store<T> in
@@ -46,28 +82,54 @@ extension LocusContainer: SettingsContainer, SettingsSubscriptable {
         }
     }
 
-    public func load(fromLoaders loaders: SettingsLoader...) {
+    public func load(fromLoaders loaders: SettingsLoader..., completion: @escaping () -> Void) {
+        executeNextLoader(from: loaders, completion: completion)
+    }
+
+    private func executeNextLoader(from array: [SettingsLoader], completion: @escaping () -> Void) {
+
+        if array.isEmpty {
+            os_log("%@Finished loading settings.", type: .debug, logPrefix)
+            completion()
+            return
+        }
+
+        var loaders = array
+        let loader = loaders.removeFirst()
+        os_log("%@Executing loader %@ ...", type: .debug, logPrefix, String(describing: loader))
+        loader.load(into: self) {
+            self.executeNextLoader(from: loaders, completion: completion)
+        }
     }
 
     public func resolve<T>(_ key: String) -> T {
-        return storeChain(forKey: key).value
+        registerUserDefaultValues()
+        return storageChain(forKey: key).value
     }
 
     public func store<T>(key: String, value: T) {
-        storeChain(forKey: key).update(withDefaultValue: value)
+        storageChain(forKey: key).update(withDefaultValue: value)
     }
 
     public func reset(key: String) {
         (stores[key] as? Store<Any>)?.reset()
     }
 
-    private func storeChain<T>(forKey key: String) -> Store<T> {
+    private func storageChain<T>(forKey key: String) -> Store<T> {
         if let store = stores[key] {
             if let castStore = store as? Store<T> {
                 return castStore
             }
-            locusFatalError("Cast failure. Cannot cast a " + String(describing: type(of: store)) + " to a Store<" + String(describing: T.self) + ">.")
+            fatalError(fatalPrefix + "Cast failure. Cannot cast a " + String(describing: type(of: store)) + " to a Store<" + String(describing: T.self) + ">.")
         }
-        locusFatalError("Unknown key: " + key)
+        fatalError(fatalPrefix + "Unknown key: " + key)
+    }
+}
+
+extension LocusContainer: SettingsLoadable {
+
+    // MARK: - SettingsLoadable
+
+    public func update<V>(key: String, defaultValue value: V) {
     }
 }

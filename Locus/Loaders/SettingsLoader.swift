@@ -7,5 +7,5 @@
 //
 
 public protocol SettingsLoader {
-    init(container: SettingsLoadable)
+    func load(into: SettingsLoadable, completion: @escaping () -> Void)
 }
