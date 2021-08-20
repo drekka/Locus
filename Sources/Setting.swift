@@ -10,29 +10,20 @@
 public class Setting<T> {
 
     public var wrappedValue: T {
-        get {
-            let value = store.value
-            guard let value = value as? T else {
-                fatalError("💥💥💥 Expecting a \(T.self) but got a \(type(of: value)) from the settings container 💥💥💥")
-            }
-            return value
-        }
-        set { store.value = newValue }
+        get { container()[key] }
+        set { container()[key] = newValue }
     }
 
-    private var storeSource: (() -> Store)!
-    private lazy var store: Store = {
-        defer {
-            storeSource = nil
-        }
-        return storeSource()
-    }()
+    private let container: () -> SettingsContainer
+    private let key: String
 
-    public init(wrappedValue _: T, key: String, container: SettingsContainer = .shared) {
-        storeSource = { container.store(forKey: key) }
+    public init(wrappedValue _: T, key: String, container: @escaping () -> SettingsContainer = { SettingsContainer.shared }) {
+        self.key = key
+        self.container = container
     }
 
-    public init(key: String, container: SettingsContainer = .shared) {
-        storeSource = { container.store(forKey: key) }
+    public init(key: String, container: @escaping () -> SettingsContainer = { SettingsContainer.shared }) {
+        self.key = key
+        self.container = container
     }
 }

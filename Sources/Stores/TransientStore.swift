@@ -8,30 +8,53 @@
 import os
 
 /// A store that can be updated, but doesn't preserve the value across app restarts.
-public class TransientStore: Store {
+public class TransientStore: Store, ValueCastable {
 
-    private let nextStore: Store
-    private var transientValue: Any?
+    private var parent: Store
+    private var transientValues: [String: Any] = [:]
 
-    public var value: Any {
+    public init(parent: Store) {
+        self.parent = parent
+    }
+
+    public func register(configuration: SettingConfiguration) {
+        parent.register(configuration: configuration)
+    }
+
+    public func configuration(forKey key: String) -> SettingConfiguration {
+        parent.configuration(forKey: key)
+    }
+
+    public func setDefault<T>(_ value: T, forKey key: String) {
+        parent.setDefault(value, forKey: key)
+    }
+
+    public func remove(key: String) {
+        if parent.configuration(forKey: key).scope == .transient {
+            os_log(.debug, "🧩 TransientStore: Removing value for %@", key)
+            transientValues.removeValue(forKey: key)
+        } else {
+            os_log(.debug, "🧩 TransientStore: Passing to parent")
+            parent.remove(key: key)
+        }
+    }
+
+    public subscript<T>(key: String) -> T {
         get {
-            if let value = transientValue {
-                os_log(.debug, "🧩 TransientStore: Found value in transient store")
-                return value
+            if let value = transientValues[key] {
+                os_log(.debug, "🧩 TransientStore: Found value for key %@", key)
+                return cast(value, forKey: key)
             }
-            return nextStore.value
+            return parent[key]
         }
         set {
-            os_log(.debug, "🧩 TransientStore: Storing transient value")
-            transientValue = newValue
+            if parent.configuration(forKey: key).scope == .transient {
+                os_log(.debug, "🧩 TransientStore: Storing value for key %@", key)
+                transientValues[key] = newValue
+            } else {
+                os_log(.debug, "🧩 TransientStore: Passing to parent")
+                parent[key] = newValue
+            }
         }
-    }
-
-    public init(nextStore: Store) {
-        self.nextStore = nextStore
-    }
-
-    public func setDefault(_ value: Any) {
-        nextStore.setDefault(value)
     }
 }

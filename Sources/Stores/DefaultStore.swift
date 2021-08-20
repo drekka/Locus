@@ -4,22 +4,42 @@
 //
 //  Created by Derek Clarkson on 18/7/21.
 //
-import os
 
-public class DefaultStore: Store {
+/// A default store for in memory settings.
+///
+/// There should be a value for every setting in this store as it is always the last store in the chain.
+public class DefaultStore: Store, ValueCastable {
 
-    private var _value: Any
+    private var configurations: [String: SettingConfiguration] = [:]
 
-    public var value: Any {
-        get { _value }
-        set { fatalError("💥💥💥 Cannot write values to a DefaultStore 💥💥💥") }
+    public func register(configuration: SettingConfiguration) {
+        if configurations.keys.contains(configuration.key) {
+            fatalError("💥💥💥 Duplicate configuration for '\(configuration.key)' found 💥💥💥")
+        }
+        configurations[configuration.key] = configuration
     }
 
-    public init(config: SettingConfig) {
-        _value = config.defaultValue
+    public func configuration(forKey key: String) -> SettingConfiguration {
+        guard let configuration = configurations[key] else {
+            fatalError("💥💥💥 Key \(key) not registered with Locus 💥💥💥")
+        }
+        return configuration
     }
 
-    public func setDefault(_ value: Any) {
-        _value = value
+    public func setDefault<T>(_ value: T, forKey key: String) {
+        configuration(forKey: key).defaultValue = value
+    }
+
+    public func remove(key _: String) {
+        fatalError("💥💥💥 Cannot removes values from a DefaultStore 💥💥💥")
+    }
+
+    public subscript<T>(key: String) -> T {
+        get {
+            cast(configuration(forKey: key).defaultValue!, forKey: key)
+        }
+        set {
+            fatalError("💥💥💥 Cannot write values to a DefaultStore 💥💥💥")
+        }
     }
 }

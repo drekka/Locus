@@ -25,6 +25,7 @@ class IntegrationTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        SettingsContainer.shared = SettingsContainer()
         SettingsContainer.shared.register {
             setting(withKey: "setting.int", default: 5)
             setting(withKey: "setting.string", default: "abc")
@@ -43,5 +44,9 @@ class IntegrationTests: XCTestCase {
 
     func testIncorrectTypeFatals() {
         expect(self.myIncorrectTypeSetting).to(throwAssertion())
+    }
+
+    func testSettingAReadonlyFatals() {
+        expect(self.mySettingInt = 5).to(throwAssertion())
     }
 }
