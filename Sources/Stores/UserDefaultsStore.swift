@@ -1,10 +1,7 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 18/7/21.
 //
-import os
+
 import UIKit
 
 /// Protocol duplicating `UserDefaults` functions so mocks can be injected during testing.
@@ -37,8 +34,8 @@ public class UserDefaultsStore: Store, ValueCastable {
     }
 
     public func setDefault<T>(_ value: T, forKey key: String) {
-        if parent.configuration(forKey: key).scope == .userDefaults {
-            os_log(.debug, "🧩 UserDefaultsStore: Registering default value for \(key) in user defaults")
+        if parent.configuration(forKey: key).storage == .userDefaults {
+            log.debug("🧩 UserDefaultsStore: Setting default for '\(key)'")
             defaults.register(defaults: [key: value])
         } else {
             parent.setDefault(value, forKey: key)
@@ -46,8 +43,8 @@ public class UserDefaultsStore: Store, ValueCastable {
     }
 
     public func remove(key: String) {
-        if parent.configuration(forKey: key).scope == .userDefaults {
-            os_log(.debug, "🧩 UserDefaultsStore: removing value for key \(key)")
+        if parent.configuration(forKey: key).storage == .userDefaults {
+            log.debug("🧩 UserDefaultsStore: removing '\(key)'")
             defaults.removeObject(forKey: key)
         } else {
             parent.remove(key: key)
@@ -56,17 +53,17 @@ public class UserDefaultsStore: Store, ValueCastable {
 
     public subscript<T>(key: String) -> T {
         get {
-            guard parent.configuration(forKey: key).scope == .userDefaults,
+            guard parent.configuration(forKey: key).storage == .userDefaults,
                   let value = defaults.value(forKey: key) else {
                 return parent[key]
             }
 
-            os_log(.debug, "🧩 UserDefaultsStore: Found value in user defaults")
+            log.debug("🧩 UserDefaultsStore: Returning '\(key)' -> \(String(describing: value))")
             return cast(value, forKey: key)
         }
         set {
-            if parent.configuration(forKey: key).scope == .userDefaults {
-                os_log(.debug, "🧩 UserDefaultsStore: Storing value for \(key) in user defaults")
+            if parent.configuration(forKey: key).storage == .userDefaults {
+                log.debug("🧩 UserDefaultsStore: Storing '\(key)'")
                 defaults.set(newValue, forKey: key)
             } else {
                 parent[key] = newValue

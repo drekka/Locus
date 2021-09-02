@@ -1,11 +1,6 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 18/7/21.
 //
-
-import os
 
 /// A store that can be updated, but doesn't preserve the value across app restarts.
 public class TransientStore: Store, ValueCastable {
@@ -30,11 +25,11 @@ public class TransientStore: Store, ValueCastable {
     }
 
     public func remove(key: String) {
-        if parent.configuration(forKey: key).scope == .transient {
-            os_log(.debug, "🧩 TransientStore: Removing value for %@", key)
+        if parent.configuration(forKey: key).storage == .transient {
+            log.debug("🧩 TransientStore: Removing value for '\(key)'")
             transientValues.removeValue(forKey: key)
         } else {
-            os_log(.debug, "🧩 TransientStore: Passing to parent")
+            log.debug("🧩 TransientStore: Passing to parent")
             parent.remove(key: key)
         }
     }
@@ -42,17 +37,16 @@ public class TransientStore: Store, ValueCastable {
     public subscript<T>(key: String) -> T {
         get {
             if let value = transientValues[key] {
-                os_log(.debug, "🧩 TransientStore: Found value for key %@", key)
+                log.debug("🧩 TransientStore: Found value for '\(key)'")
                 return cast(value, forKey: key)
             }
             return parent[key]
         }
         set {
-            if parent.configuration(forKey: key).scope == .transient {
-                os_log(.debug, "🧩 TransientStore: Storing value for key %@", key)
+            if parent.configuration(forKey: key).storage == .transient {
+                log.debug("🧩 TransientStore: Storing value for key '\(key)'")
                 transientValues[key] = newValue
             } else {
-                os_log(.debug, "🧩 TransientStore: Passing to parent")
                 parent[key] = newValue
             }
         }

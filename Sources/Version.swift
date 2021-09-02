@@ -1,7 +1,4 @@
 //
-//  File.swift
-//  
-//
 //  Created by Derek Clarkson on 11/7/21.
 //
 /// Provides semantic version numbers.

@@ -12,13 +12,13 @@ class DefaultStoreTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        let intConfig = SettingConfiguration(withKey: "abc", default: 5)
+        let intConfig = SettingConfiguration("abc", default: 5)
         store = DefaultStore()
         store.register(configuration: intConfig)
     }
 
     func testDuplicateRegister() {
-        let stringConfig = SettingConfiguration(withKey: "abc", default: "xyz")
+        let stringConfig = SettingConfiguration("abc", default: "xyz")
         expect(self.store.register(configuration: stringConfig)).to(throwAssertion())
     }
 

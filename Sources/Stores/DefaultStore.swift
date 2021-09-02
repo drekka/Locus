@@ -1,7 +1,4 @@
 //
-//  File.swift
-//
-//
 //  Created by Derek Clarkson on 18/7/21.
 //
 
@@ -21,7 +18,7 @@ public class DefaultStore: Store, ValueCastable {
 
     public func configuration(forKey key: String) -> SettingConfiguration {
         guard let configuration = configurations[key] else {
-            fatalError("💥💥💥 Key \(key) not registered with Locus 💥💥💥")
+            fatalError("💥💥💥 Key '\(key)' not registered with Locus 💥💥💥")
         }
         return configuration
     }
@@ -39,7 +36,7 @@ public class DefaultStore: Store, ValueCastable {
             cast(configuration(forKey: key).defaultValue!, forKey: key)
         }
         set {
-            fatalError("💥💥💥 Cannot write values to a DefaultStore 💥💥💥")
+            fatalError("💥💥💥 DefaultStore is read only. Cannot write a value for '\(key)' 💥💥💥")
         }
     }
 }

@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "Locus",
     platforms: [
-        .iOS(.v14),
+        .iOS(.v15),
         .tvOS(.v11),
         .macOS(.v10_11),
     ],
@@ -31,7 +31,11 @@ let package = Package(
             dependencies: [
                 "Locus", "Nimble",
             ],
-            path: "Tests"
+            path: "Tests",
+            resources: [
+                .copy("Settings.bundle"),
+                .copy("Settings.json"),
+            ]
         ),
     ]
 )

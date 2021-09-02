@@ -21,13 +21,13 @@ class TransientStoreTests: XCTestCase {
     }
 
     func testRegisterPassesThrough() {
-        let configuration = SettingConfiguration(withKey: "abc", default: 5)
+        let configuration = SettingConfiguration("abc", default: 5)
         transientStore.register(configuration: configuration)
         expect(self.mockParent.registerConfiguration) === configuration
     }
 
     func testConfigurationPassesThrough() {
-        mockParent.configurationResult = SettingConfiguration(withKey: "abc", default: 5)
+        mockParent.configurationResult = SettingConfiguration("abc", default: 5)
 
         let configuration = transientStore.configuration(forKey: "abc")
         expect(self.mockParent.configurationKey) == "abc"
@@ -41,14 +41,14 @@ class TransientStoreTests: XCTestCase {
     }
 
     func testRemovePassesThroughWhenNotTransient() {
-        mockParent.configurationResult = SettingConfiguration(withKey: "abc", default: 5)
+        mockParent.configurationResult = SettingConfiguration("abc", default: 5)
         transientStore.remove(key: "abc")
         expect(self.mockParent.removeKey) == "abc"
     }
 
     func testRemoveClearsTransientValue() {
 
-        mockParent.configurationResult = SettingConfiguration(withKey: "abc", scope: .transient, default: 5)
+        mockParent.configurationResult = SettingConfiguration("abc", storage: .transient, default: 5)
         transientStore["abc"] = 10
 
         // Remove
@@ -71,7 +71,7 @@ class TransientStoreTests: XCTestCase {
     }
 
     func testGetReturnsTransientValue() {
-        mockParent.configurationResult = SettingConfiguration(withKey: "abc", scope: .transient, default: 5)
+        mockParent.configurationResult = SettingConfiguration("abc", storage: .transient, default: 5)
         transientStore["abc"] = 10
         
         expect(self.transientStore["abc"] as Int) == 10
@@ -79,7 +79,7 @@ class TransientStoreTests: XCTestCase {
     }
 
     func testGetReturnsParentValue() {
-        mockParent.configurationResult = SettingConfiguration(withKey: "abc", scope: .transient, default: 5)
+        mockParent.configurationResult = SettingConfiguration("abc", storage: .transient, default: 5)
         mockParent.subscriptResult = 5
         
         expect(self.transientStore["abc"] as Int) == 5
@@ -87,7 +87,7 @@ class TransientStoreTests: XCTestCase {
     }
 
     func testSetPasseThroughWhenNotTransient() {
-        mockParent.configurationResult = SettingConfiguration(withKey: "abc", default: 5)
+        mockParent.configurationResult = SettingConfiguration("abc", default: 5)
         
         transientStore["abc"] = 10
         expect(self.mockParent.subscriptKey) == "abc"
@@ -95,7 +95,7 @@ class TransientStoreTests: XCTestCase {
     }
 
     func testSetStoresValueWhenTransient() {
-        mockParent.configurationResult = SettingConfiguration(withKey: "abc", scope: .transient, default: 5)
+        mockParent.configurationResult = SettingConfiguration("abc", storage: .transient, default: 5)
         
         transientStore["abc"] = 10
         expect(self.transientStore["abc"] as Int) == 10
