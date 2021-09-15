@@ -8,7 +8,7 @@ let package = Package(
     platforms: [
         .iOS(.v15),
         .tvOS(.v11),
-        .macOS(.v10_11),
+        //.macOS(.v10_11),
     ],
     products: [
         .library(
@@ -33,8 +33,13 @@ let package = Package(
             ],
             path: "Tests",
             resources: [
-                .copy("Settings.bundle"),
-                .copy("Settings.json"),
+                .copy("Test files/Settings.bundle"),
+                .copy("Test files/Missing child pane.bundle"),
+                .copy("Test files/Incorrect setting type.bundle"),
+                .copy("Test files/Bad plist.bundle"),
+                .copy("Test files/Bad plist content.bundle"),
+                .copy("Test files/Settings.json"),
+                .copy("Test files/Invalid.json"),
             ]
         ),
     ]

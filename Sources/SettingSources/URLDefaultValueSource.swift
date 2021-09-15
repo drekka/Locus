@@ -6,30 +6,31 @@ import Combine
 import UIKit
 
 /// Conveniant wrapper around loading default values from a URL.
-public class URLDefaultValueSource: BaseDefaultValueSource {
+open class URLDefaultValueSource: DefaultValueSource {
 
-    private let mapper: (_ sourceData: Data, _ defaultValuePublisher: Sender<DefaultValueChange, Error>) -> Void
+    private var cancellableTask: Cancellable?
+    
     private let url: URL
     private let headers: [String: String]?
-    private var cancellableTask: Cancellable?
-
+    private let mapper: (Data, Defaultable) -> Void
+        
     public init(url: URL,
-         headers: [String: String]? = nil,
-         mapper: @escaping (_ sourceData: Data, _ defaultValuePublisher: Sender<DefaultValueChange, Error>) -> Void) {
-        self.mapper = mapper
+                headers: [String: String]? = nil,
+                mapper: @escaping (_ sourceData: Data, _ store: Defaultable) -> Void) {
         self.url = url
         self.headers = headers
+        self.mapper = mapper
     }
-
-    public override func read() {
+    
+    open override func readDefaults(_ defaults: Defaultable) {
         let session = URLSession(configuration: URLSessionConfiguration.ephemeral)
         var request = URLRequest(url: url)
         headers?.forEach { request.addValue($1, forHTTPHeaderField: $0) }
-        cancellableTask = session.dataTaskPublisher(for: request).sink { _ in
+        self.cancellableTask = session.dataTaskPublisher(for: request).sink { _ in
             self.cancellableTask = nil
         }
         receiveValue: { data, _ in
-            self.mapper(data, Sender(subject: self.defaultValuePublisher))
+            self.mapper(data, defaults)
         }
     }
 }

@@ -2,16 +2,8 @@
 //  Created by Derek Clarkson on 18/7/21.
 //
 
-public protocol Defaultable {
-    /// Sets the default value for a key.
-    ///
-    /// - parameter key: The key of the setting.
-    /// - parameter value: The new value.
-    func setDefault<T>(_ value: T, forKey key: String)
-}
-
 /// Defines the features of every type of store used to source and save a setting's value.
-public protocol Store: Defaultable {
+public protocol Store {
     
     /// Registers a key, it's attributes and default value.
     ///
@@ -23,6 +15,12 @@ public protocol Store: Defaultable {
     /// - parameter key: The key of the setting.
     /// - returns: The setting's configuration.
     func configuration(forKey key: String) -> SettingConfiguration
+
+    /// Sets the default value for a setting.
+    ///
+    /// - parameter value: The new default value.
+    /// - parameter key: The key of the setting.
+    func setDefault<T>(_ value: T, forKey key: String)
     
     /// Removes the current value of a key.
     ///

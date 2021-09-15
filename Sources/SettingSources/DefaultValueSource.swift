@@ -4,27 +4,26 @@
 
 import Combine
 
-/// Defines a key/value tuple representing a new value for a setting published by sources.
-public typealias DefaultValueChange = (String, Any)
+/// A parent class for value sources.
+open class DefaultValueSource: Publisher {
 
-/// A Source of default values for settings.
-public protocol DefaultValueSource {
-    
-    /// The publsiher used by Locus as a source of default values.
+    public typealias Output = DefaultValueUpdate
+    public typealias Failure = Error
+
+    /// Override to publisher function.
     ///
-    /// Sources shuld make use of this publisher to update the registered settings.
-    var defaultValues: AnyPublisher<DefaultValueChange, Error> { get }
-    
-    /// Called by Locus to tell the source to read it's data and send the results via the publisher.
-    func read()
-}
+    /// Do not call.
+    public func receive<S>(subscriber: S) where S: Subscriber, S.Failure == Failure, S.Input == Output {
+        let defaultValueSubject = PassthroughSubject<DefaultValueUpdate, Error>()
+        defaultValueSubject.receive(subscriber: subscriber)
+        readDefaults(Defaultable(subject: defaultValueSubject))
+    }
 
-open class BaseDefaultValueSource: DefaultValueSource {
-    
-    let defaultValuePublisher = PassthroughSubject<DefaultValueChange, Error>()
-    public var defaultValues: AnyPublisher<DefaultValueChange, Error> { defaultValuePublisher.eraseToAnyPublisher() }
-
-    open func read() {
-        fatalError("💥💥💥 read() must be overrriden 💥💥💥")
+    /// Override to read updates to default settings.
+    ///
+    /// - parameter defaults: Call the methods on this instance to update the defaults and notify the container when this class has finished reading values.
+    // swiftformat:disable:next unusedArguments
+    open func readDefaults(_ defaults: Defaultable) {
+        fatalError("💥💥💥 DefaultValueSource.readDefailts(_:) not overrriden 💥💥💥")
     }
 }

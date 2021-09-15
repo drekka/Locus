@@ -5,52 +5,88 @@
 import Combine
 import UIKit
 
-public class SettingsBundleDefaultValueSource: BaseDefaultValueSource {
+public enum SettingsBundleError: LocalizedError {
+    case plistNotFound(String)
+    case invalidPlist(String)
+    case castFailure(String)
+    
+    public var errorDescription: String? {
+        switch self {
+        case .plistNotFound(let name):
+            return "Plist not found \(name)"
+        case .invalidPlist(let name):
+            return "The content of \(name) isn't a valid plist definition."
+        case .castFailure(let message):
+            return "Cast failure \(message)"
+        }
+
+    }
+}
+
+public class SettingsBundleDefaultValueSource: DefaultValueSource {
 
     private let parentBundle: Bundle
-    private let settingBundleName: String
+    private let settingsBundleName: String
     private let rootPlistFileName: String
-    
+
     public init(parentBundle: Bundle = Bundle.main,
-                settingBundleName: String = "Settings",
+                settingsBundleName: String = "Settings",
                 rootPlistFileName: String = "Root") {
         self.parentBundle = parentBundle
-        self.settingBundleName = settingBundleName
+        self.settingsBundleName = settingsBundleName
         self.rootPlistFileName = rootPlistFileName
     }
 
-    public override func read() {
-        if let settingsBundleURL = parentBundle.url(forResource: settingBundleName, withExtension: "bundle"),
-           let settingsBundle = Bundle(url: settingsBundleURL) {
-            read(from: rootPlistFileName, inBundle: settingsBundle)
-        }
-        defaultValuePublisher.send(completion: .finished)
-    }
+    override public func readDefaults(_ defaults: Defaultable) {
 
-    private func read(from plistName: String, inBundle bundle: Bundle) {
-
-        guard let plistUrl = bundle.url(forResource: plistName, withExtension: "plist"),
-              let data = try? Data(contentsOf: plistUrl),
-              let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else {
+        guard let settingsBundleURL = parentBundle.url(forResource: settingsBundleName, withExtension: "bundle"),
+              let settingsBundle = Bundle(url: settingsBundleURL) else {
+            defaults.complete()
             return
         }
 
-        // Process the plist data.
-        log.debug("🧩 SettingsBundleDefaultsSource: Reading \(plistName).plist")
-        (plist["PreferenceSpecifiers"] as? [[String: Any]])?.forEach { preference in
-
-            // Loop back for child panes.
-            if preference["Type"] as? String == "PSChildPaneSpecifier", let file = preference["File"] as? String {
-                read(from: file, inBundle: bundle)
-                return
-            }
-
-            // Process the preference.
-            loadDefaultValue(from: preference, in: plistName)
+        do {
+            try readDefaults(fromPlist: rootPlistFileName, inBundle: settingsBundle, defaults: defaults)
+            defaults.complete()
+        } catch {
+            log.debug("🧩 SettingsBundleDefaultsSource: Error: \(error.localizedDescription)")
+            defaults.fail(withError: error)
         }
     }
 
-    private func loadDefaultValue(from preference: [String: Any], in plistName: String) {
+    private func readDefaults(fromPlist plistName: String, inBundle bundle: Bundle, defaults: Defaultable) throws {
+
+        log.debug("🧩 SettingsBundleDefaultsSource: Reading \(plistName).plist")
+        let plist = try contentsOf(preferencesPlist: plistName, inBundle: bundle, defaults: defaults)["PreferenceSpecifiers"] as? [[String: Any]]
+
+        // Process the plist data.
+        try plist?.forEach { preference in
+
+            // Recurse for child panes.
+            if preference["Type"] as? String == "PSChildPaneSpecifier", let file = preference["File"] as? String {
+                try readDefaults(fromPlist: file, inBundle: bundle, defaults: defaults)
+                return
+            }
+
+            try readDefaultValue(from: preference, in: plistName, defaults: defaults)
+        }
+    }
+
+    private func contentsOf(preferencesPlist plistName: String, inBundle bundle: Bundle, defaults _: Defaultable) throws -> [String: Any] {
+
+        guard let plistUrl = bundle.url(forResource: plistName, withExtension: "plist") else {
+            throw SettingsBundleError.plistNotFound(plistName + ".plist")
+        }
+
+        // Fail if we cannot read it.
+        let data = try Data(contentsOf: plistUrl)
+        guard let plist = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] else {
+            throw SettingsBundleError.invalidPlist(plistName + ".plist")
+        }
+        return plist
+    }
+
+    private func readDefaultValue(from preference: [String: Any], in plistName: String, defaults: Defaultable) throws {
 
         guard let type = preference["Type"] as? String,
               let key = preference["Key"] as? String,
@@ -58,31 +94,30 @@ public class SettingsBundleDefaultValueSource: BaseDefaultValueSource {
             return
         }
 
-
-        func send<T>(_ value: Any, as _: T.Type) {
+        func send<T>(_ value: Any, as _: T.Type) throws {
             guard let value = value as? T else {
-                fatalError("💥💥💥 Cannot cast value for Settings preference '\(key)' in \(plistName).plist to a \(T.self) 💥💥💥")
+                throw SettingsBundleError.castFailure("Cannot cast value for Settings preference '\(key)' in \(plistName).plist to a \(T.self)")
             }
             log.debug("🧩 SettingsBundleDefaultsSource: \(plistName).plist (\(type)) \(key) -> \(String(describing: value))")
-            defaultValuePublisher.send((key, value))
+            defaults.setDefault(value, forKey: key)
         }
 
         switch type {
 
         case "PSToggleSwitchSpecifier":
-            send(value, as: Bool.self)
+            try send(value, as: Bool.self)
 
         case "PSSliderSpecifier":
-            send(value, as: Double.self)
+            try send(value, as: Double.self)
 
         case "PSMultiValueSpecifier":
-            send(value, as: String.self)
+            try send(value, as: String.self)
 
         case "PSRadioGroupSpecifier":
-            send(value, as: String.self)
+            try send(value, as: String.self)
 
         case "PSTextFieldSpecifier":
-            send(value, as: String.self)
+            try send(value, as: String.self)
 
         default:
             return

@@ -9,6 +9,8 @@ public class DefaultStore: Store, ValueCastable {
 
     private var configurations: [String: SettingConfiguration] = [:]
 
+    public init() {}
+
     public func register(configuration: SettingConfiguration) {
         if configurations.keys.contains(configuration.key) {
             fatalError("💥💥💥 Duplicate configuration for '\(configuration.key)' found 💥💥💥")

@@ -8,8 +8,6 @@ import XCTest
 
 class IntegrationTests: XCTestCase {
 
-    private var testResourceBundle: Bundle!
-
     @Setting("name")
     var userDefaultsName: String
 
@@ -59,13 +57,11 @@ class IntegrationTests: XCTestCase {
             transient("transient.date", default: Date())
             transient("transient.string", default: "abc")
         }
-
-        let testBundlePath = Bundle(for: IntegrationTests.self).resourcePath
-        testResourceBundle = Bundle(path: testBundlePath! + "/Locus_LocusTests.bundle")!
     }
 
     func testReadingDefaults() {
-        SettingsContainer.shared.read(sources: SettingsBundleDefaultValueSource(parentBundle: testResourceBundle))
+        readDefaultValueSources(SettingsBundleDefaultValueSource(parentBundle: Bundle.testBundle))
+
         expect(self.userDefaultsName) == "Fred"
         expect(self.userDefaultsEnabled) == true
         expect(self.userDefaultsSlider) == 0.5
@@ -77,7 +73,8 @@ class IntegrationTests: XCTestCase {
     }
 
     func testChangingValues() {
-        SettingsContainer.shared.read(sources: SettingsBundleDefaultValueSource(parentBundle: testResourceBundle))
+        readDefaultValueSources(SettingsBundleDefaultValueSource(parentBundle: Bundle.testBundle))
+
         userDefaultsName = "Derek"
         userDefaultsEnabled = false
         userDefaultsSlider = 0
@@ -85,29 +82,29 @@ class IntegrationTests: XCTestCase {
         expect(self.userDefaultsName) == "Derek"
         expect(self.userDefaultsEnabled) == false
         expect(self.userDefaultsSlider) == 0
-        
+
         expect(self.readOnlyJsonNumber = 10).to(throwAssertion())
     }
 
     func testReadingAJSONFileOfDefaults() {
 
-        let exp = expectation(description: "reading json")
+        let url = Bundle.testBundle.url(forResource: "Settings", withExtension: "json")!
+        let source = JSONDefaultValueSource(url: url) { json, defaultValueSender in
+            (json as! [String: Any]).forEach { defaultValueSender.setDefault($0.value, forKey: $0.key) }
+            defaultValueSender.complete()
+        }
 
-        let url = testResourceBundle.url(forResource: "Settings", withExtension: "json")!
-        SettingsContainer.shared.read(sources: URLDefaultValueSource(url: url) { data, defaultValueSender in
-            do {
-                let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
-                json?.forEach { defaultValueSender.send(($0.key, $0.value)) }
-                defaultValueSender.send(completion: .finished)
-            } catch {
-                defaultValueSender.send(completion: .failure(error))
-            }
-            exp.fulfill()
-        })
-
-        waitForExpectations(timeout: 5.0)
+        readDefaultValueSources(source)
 
         expect(self.readOnlyJsonURL) == URL(string: "http://abc.com")!
         expect(self.readOnlyJsonNumber) == 10
+    }
+
+    private func readDefaultValueSources(_ sources: DefaultValueSource...) {
+        let exp = expectation(description: "reading json")
+        SettingsContainer.shared.read(sources: sources) { _ in
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 5.0)
     }
 }

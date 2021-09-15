@@ -22,28 +22,44 @@ public class SettingsContainer {
 
     private var stores: Store
     private var registeredSettings: [String: SettingConfiguration] = [:]
-    private var readDefaultsCancellable: Cancellable?
+    private var defaultsSourceCancellable: Cancellable?
 
     // MARK: - Lifecycle
 
-    public init() {
-        stores = TransientStore(parent: UserDefaultsStore(parent: DefaultStore()))
+    public init(stores: Store = TransientStore(parent: UserDefaultsStore(parent: DefaultStore()))) {
+        self.stores = stores
     }
 
     /// Loads settings from a list of sources.
     ///
     /// - parameter sources: A list of sources where settings can be obtianed, in the order you want them to be read.
-    public func read(sources: DefaultValueSource...) {
+    public func read(sources: DefaultValueSource..., completion: @escaping (Error?) -> Void) {
+        read(sources: sources, completion: completion)
+    }
 
-        readDefaultsCancellable = sources.publisher
-            .flatMap(maxPublishers: .max(1)) { $0.defaultValues }
-            .sink { _ in
-                self.readDefaultsCancellable = nil
-            }
-        receiveValue: { self.stores.setDefault($0.1, forKey: $0.0) }
+    /// Loads settings from a list of sources.
+    ///
+    /// - parameter sources: A list of sources where settings can be obtianed, in the order you want them to be read.
+    public func read(sources: [DefaultValueSource], completion: @escaping (Error?) -> Void) {
 
+        // Execute publishers in sequence one at a time.
         log.debug("🧩 SettingsContainer: Reading sources for default values")
-        sources.forEach { $0.read() }
+        defaultsSourceCancellable = sources.publisher
+            .flatMap(maxPublishers: .max(1)) { $0 }
+            .sink { result in
+                log.debug("🧩 SettingsContainer: Finished reading default values")
+                self.defaultsSourceCancellable = nil
+                switch result {
+                case .failure(let error):
+                    completion(error)
+                default:
+                    completion(nil)
+                }
+            }
+        receiveValue: { defaultValue in
+            self.stores.setDefault(defaultValue.1, forKey: defaultValue.0)
+            log.debug("🧩 SettingsContainer: Stored default value: \(defaultValue.0) -> \(String(describing: defaultValue.1))")
+        }
     }
 
     /// Entry point for registering settups with the container.
@@ -54,7 +70,7 @@ public class SettingsContainer {
             stores.register(configuration: configuration)
         }
     }
-    
+
     // MARK: - Accessing values
 
     /// Provides access to settings.

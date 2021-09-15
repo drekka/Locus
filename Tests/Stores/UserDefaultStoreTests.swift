@@ -9,46 +9,19 @@ import Locus
 import Nimble
 import XCTest
 
-// Use this mock because sunchronisation of user defaults is unreliable.
-class MockDefaults: Defaults {
-    var registerDefaults: [String: Any]?
-    func register(defaults: [String: Any]) {
-        registerDefaults = defaults
-    }
-
-    var removeObjectForKey: String?
-    func removeObject(forKey: String) {
-        removeObjectForKey = forKey
-    }
-
-    var valueForKey: String?
-    var valueForKeyResult: Any?
-    func value(forKey: String) -> Any? {
-        valueForKey = forKey
-        return valueForKeyResult
-    }
-
-    var setForKey: String?
-    var setValue: Any?
-    func set(_ value: Any?, forKey: String) {
-        setForKey = forKey
-        setValue = value
-    }
-}
-
 class UserDefaultsStoreTests: XCTestCase {
 
     private let key = "__testKey"
 
     private var store: UserDefaultsStore!
     private var mockStore: MockStore!
-    private var mockDefaults: MockDefaults!
+    private var mockDefaults: MockUserDefaults!
 
     override func setUp() {
         super.setUp()
 
         mockStore = MockStore()
-        mockDefaults = MockDefaults()
+        mockDefaults = MockUserDefaults()
         store = UserDefaultsStore(parent: mockStore, defaults: mockDefaults)
     }
 
