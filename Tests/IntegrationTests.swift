@@ -8,34 +8,47 @@ import XCTest
 
 class IntegrationTests: XCTestCase {
 
-    @Setting("name")
+    enum SettingKey: String {
+        case name
+        case enabled
+        case slider
+        case debugName = "DebugName"
+        case debugEnabled = "DebugEnabled"
+        case debugSlider = "DebugSlider"
+        case jsonUrl
+        case jsonNumber
+        case transientDate = "transient.date"
+        case transientString = "transient.string"
+    }
+
+    @Setting(SettingKey.name)
     var userDefaultsName: String
 
-    @Setting("enabled")
+    @Setting(SettingKey.enabled)
     var userDefaultsEnabled: Bool
 
-    @Setting("slider")
+    @Setting(SettingKey.slider)
     var userDefaultsSlider: Double
 
-    @Setting("DebugName")
+    @Setting(SettingKey.debugName)
     var userDefaultsDebugName: String
 
-    @Setting("DebugEnabled")
+    @Setting(SettingKey.debugEnabled)
     var userDefaultsDebugEnabled: Bool
 
-    @Setting("DebugSlider")
+    @Setting(SettingKey.debugSlider)
     var userDefaultsDebugSlider: Double
 
-    @Setting("jsonUrl")
+    @Setting(SettingKey.jsonUrl)
     var readOnlyJsonURL: URL
 
-    @Setting("jsonNumber")
+    @Setting(SettingKey.jsonNumber)
     var readOnlyJsonNumber: Int
 
-    @Setting("transient.date")
+    @Setting(SettingKey.transientDate)
     var transientDate: Date
 
-    @Setting("transient.string")
+    @Setting(SettingKey.transientString)
     var transientString: String
 
     override func setUp() {
@@ -46,16 +59,16 @@ class IntegrationTests: XCTestCase {
 
         SettingsContainer.shared = SettingsContainer()
         SettingsContainer.shared.register {
-            userDefault("name")
-            userDefault("enabled")
-            userDefault("slider")
-            userDefault("DebugName")
-            userDefault("DebugEnabled")
-            userDefault("DebugSlider")
-            readonly("jsonUrl", default: URL(string: "http://localhost")!)
-            readonly("jsonNumber", default: 0)
-            transient("transient.date", default: Date())
-            transient("transient.string", default: "abc")
+            userDefault(SettingKey.name)
+            userDefault(SettingKey.enabled)
+            userDefault(SettingKey.slider)
+            userDefault(SettingKey.debugName)
+            userDefault(SettingKey.debugEnabled)
+            userDefault(SettingKey.debugSlider)
+            readonly(SettingKey.jsonUrl, default: URL(string: "http://localhost")!)
+            readonly(SettingKey.jsonNumber, default: 0)
+            transient(SettingKey.transientDate, default: Date())
+            transient(SettingKey.transientString, default: "abc")
         }
     }
 
