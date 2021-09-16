@@ -10,7 +10,11 @@ import Combine
 import XCTest
 import Nimble
 
-enum TestError: Error {
+private enum Key: String {
+    case def
+}
+
+private enum TestError: Error {
     case anError
 }
 
@@ -45,6 +49,21 @@ class DefaultableTests: XCTestCase {
         }
     }
 
+    func testCurrentSetDefaultUsingEnum() {
+        runTest(subject: currentValueSubject) {
+            currentValueDefaultable.setDefault(2, forKey: Key.def)
+            currentValueDefaultable.complete()
+        }
+        assertResults: { value, completion in
+            switch completion {
+            case .some(.finished): break // All good
+            default: XCTFail("Unexpected \(String(describing: completion))")
+            }
+            expect(value?.0) == "def"
+            expect(value?.1 as? Int) == 2
+        }
+    }
+
     func testCurrentFails() {
         runTest(subject: currentValueSubject) {
             currentValueDefaultable.fail(withError: TestError.anError)
@@ -63,6 +82,21 @@ class DefaultableTests: XCTestCase {
     func testPassthroughSetDefault() {
         runTest(subject: passthroughSubject) {
             passthroughDefaultable.setDefault(2, forKey: "def")
+            passthroughDefaultable.complete()
+        }
+        assertResults: { value, completion in
+            switch completion {
+            case .some(.finished): break // All good
+            default: XCTFail("Unexpected \(String(describing: completion))")
+            }
+            XCTAssertEqual("def", value?.0)
+            XCTAssertEqual(2, value?.1 as? Int)
+        }
+    }
+
+    func testPassthroughSetDefaultUsingKey() {
+        runTest(subject: passthroughSubject) {
+            passthroughDefaultable.setDefault(2, forKey: Key.def)
             passthroughDefaultable.complete()
         }
         assertResults: { value, completion in

@@ -9,6 +9,10 @@ import Locus
 import Nimble
 import XCTest
 
+private enum Key: String {
+    case abc
+}
+
 class SettingsContainerTests: XCTestCase {
 
     private var mockStore: MockStore!
@@ -34,8 +38,19 @@ class SettingsContainerTests: XCTestCase {
         expect(SettingsContainer.shared["abc"] as String) == "xyz"
     }
 
+    func testGettingValueViaEnum() {
+        mockStore.subscriptResult = "xyz"
+        expect(SettingsContainer.shared[Key.abc] as String) == "xyz"
+    }
+
     func testSettingValue() {
         SettingsContainer.shared["abc"] = "xyz"
+        expect(self.mockStore.subscriptKey) == "abc"
+        expect(self.mockStore.subscriptValue as? String) == "xyz"
+    }
+
+    func testSettingValueViaEnum() {
+        SettingsContainer.shared[Key.abc] = "xyz"
         expect(self.mockStore.subscriptKey) == "abc"
         expect(self.mockStore.subscriptValue as? String) == "xyz"
     }

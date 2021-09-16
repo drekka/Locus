@@ -76,6 +76,14 @@ public class SettingsContainer {
     /// Provides access to settings.
     ///
     /// - parameter key: The key of the setting.
+    public subscript<T, K>(_ key: K) -> T where T: Any, K: RawRepresentable, K.RawValue == String {
+        get { stores[key.rawValue] }
+        set { stores[key.rawValue] = newValue }
+    }
+
+    /// Provides access to settings.
+    ///
+    /// - parameter key: The key of the setting.
     public subscript<T>(_ key: String) -> T where T: Any {
         get { stores[key] }
         set { stores[key] = newValue }

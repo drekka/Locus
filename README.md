@@ -4,47 +4,39 @@
 
 # Intro
 
-An app's settings can come from a variety of sources:
+*Locus* is an API you can employ to help wrangle your app's settings. For a small app it's likely overkill, but for a larger app where settings are sourced from a complicated mix of hard coded values, `Settings.bundle` preferences, `UserDefaults` and local or remote configuration files, *Locus* can greatly simplify and stream line accessing them.
 
-* Hard coded values
-* Preferences in a `Settings.bundle/Root.plist` file.
-* `UserDefaults`
-* Local configuration files
-* Remote configuration files
+*Locus* provides ...
 
-A lot of apps have at least two of these and it's often surprising just how much code it can take to manage them. Especially when dealing with remote configurations or there's been several developers in the code with competing ideas on how settings should be handled.
-
-Locus is designed to take the pain out of managing settings. It ...
-
-* Provides a consistent and simple API for manage and retrieving settings regardless of where they come from.
-* Automatically manage `UserDefaults` and the registration of default values listed in your app's `Settings.bundle/Root.plist` file, plus any child panes it references.
-* Manage the ability of your app to update a setting and where those updated values are stored.
-* Reads remote and local configuration files to source default values and notifies your app when they've been updated.
-* Observe changes in `UserDefaults`.
+* A consistent and simple to use API for manage and retrieving settings from numerous sources including  `UserDefaults`, `Settings.bundle` preferences, local files, remote files and customised sources unique to your app.
+* The ability to enforce which settings can be updated and where those updates are kept.
 
 # Core concepts
 
 ## The Container
 
-*Locus* is architected around a central container. Generally you don't need to deal with the container apart from initial setup. Afterwards a provided property wrapper takes over to handle things. However you can also use the container directly if you wish. 
+*Locus* is architected around a central container for managing settings. Generally you don't need to deal with the container apart from initial setup because afterwards *Locus* provides a property wrapper for easy access to settings. 
 
 ## Current value vs Default values
 
-An important point to remember is that every setting has two values. Similar to the way `UserDefaults` manages values, *Locus* has a *default* and *current* value. Where *Locus* differs from `UserDefaults`  is that it regards settings as non-optional and therefore always guarantees a value for every setting. When it needs a value to return, if checks to for a current value set by the app, and if that's `nil` returns the default value.
+Every setting has two values similar to `UserDefaults` where there is a registered and current value. *Locus* provides a similar concept through a *default* and *current* values. However where *Locus* differs from `UserDefaults`  is that it's settings are not optional and therefore will always return a value.
 
 # Quick guide
 
 ## Step 1: Register your settings in your app startup
 
+Before a setting can be accessed it must be registered. This is where the setting's initial default value is set, and where various other attributes controlling how it is accessed are defined. In addition registering also allows *Locus* to do things like finding miss-typed setting keys. 
+
 ```swift
 // Somewhere in your startup. App delegate for example.
 SettingsContainer.shared.register {
     readonly(withKey: "server.timeout", default: 30.0)
-    userDefault(withKey: "server.url")
+    readonly(withKey: "server.retries", default: 5)
+    userDefault(withKey: "server.url", releaseLocked: true)
 }
 ```
 
-Settings must be registered so *Locus* can provide default values, lint for miss-typed or  missing keys, and also controlling whether settings can be updated or not.
+
 
 ## Step 2: Add loaders to gather default values
 
@@ -88,7 +80,7 @@ SettingsContainer.shared.register {
 The argument signature for `SettingConfiguration(...)` and `setting(...)` is:
 
 ```swift
-(_ key: String, storage: Storage = .readonly, releaseLocked: Bool = false, default defaultValue: Any? = nil)
+(_ Key: SettingKey, storage: Storage = .readonly, releaseLocked: Bool = false, default defaultValue: Any? = nil)
 ```
 
 Where:

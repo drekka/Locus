@@ -24,6 +24,14 @@ public struct Defaultable {
     ///
     /// - parameter key: The key of the setting.
     /// - parameter value: The new value.
+    public func setDefault<T, K>(_ value: T, forKey key: K) where K: RawRepresentable, K.RawValue == String {
+        setDefault(value, forKey: key.rawValue)
+    }
+
+    /// Sets the default value for a key.
+    ///
+    /// - parameter key: The key of the setting.
+    /// - parameter value: The new value.
     public func setDefault<T>(_ value: T, forKey key: String) {
         sendValue((key, value))
     }
