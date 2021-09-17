@@ -14,17 +14,17 @@ class JSONDefaultValueSourceTests: XCTestCase {
 
     func testCallsMapper() {
 
-        runTest(jsonFile: "Settings") { json, defaultable in
+        runTest(jsonFile: "Settings") { json, container in
             if let data = json as? [String: Any] {
                 if let jsonUrl = data["jsonUrl"] as? String {
-                    defaultable.setDefault(jsonUrl, forKey: "jsonUrl")
+                    container.setDefault(jsonUrl, forKey: "jsonUrl")
                 }
                 if let jsonNumber = data["jsonNumber"] as? Int {
-                    defaultable.setDefault(jsonNumber, forKey: "jsonNumber")
+                    container.setDefault(jsonNumber, forKey: "jsonNumber")
                 }
             }
 
-            defaultable.complete()
+            container.complete()
         }
         validation: { completion, updates in
             switch completion {
@@ -58,8 +58,8 @@ class JSONDefaultValueSourceTests: XCTestCase {
 
         let url = Bundle.testBundle.url(forResource: jsonFile, withExtension: "json")!
         let exp = expectation(description: "Reading JSON")
-        let valueSource = JSONDefaultValueSource(url: url) { json, defaultable in
-            mapper(json, defaultable)
+        let valueSource = JSONDefaultValueSource(url: url) { json, container in
+            mapper(json, container)
         }
         
         var completion: Subscribers.Completion<Error>?

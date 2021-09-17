@@ -11,7 +11,7 @@ public class JSONDefaultValueSource: URLDefaultValueSource {
 
     public init(url: URL,
                 headers: [String: String]? = nil,
-                mapper: @escaping (_ json: Any, _ store: Defaultable) -> Void) {
+                mapper: @escaping (_ json: Any, _ container: Defaultable) -> Void) {
         super.init(url: url,
                    headers: headers) { data, defaults in
             do {

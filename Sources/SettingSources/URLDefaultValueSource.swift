@@ -16,13 +16,13 @@ open class URLDefaultValueSource: DefaultValueSource {
         
     public init(url: URL,
                 headers: [String: String]? = nil,
-                mapper: @escaping (_ sourceData: Data, _ store: Defaultable) -> Void) {
+                mapper: @escaping (_ sourceData: Data, _ container: Defaultable) -> Void) {
         self.url = url
         self.headers = headers
         self.mapper = mapper
     }
     
-    open override func readDefaults(_ defaults: Defaultable) {
+    open override func readDefaults(_ container: Defaultable) {
         let session = URLSession(configuration: URLSessionConfiguration.ephemeral)
         var request = URLRequest(url: url)
         headers?.forEach { request.addValue($1, forHTTPHeaderField: $0) }
@@ -30,7 +30,7 @@ open class URLDefaultValueSource: DefaultValueSource {
             self.cancellableTask = nil
         }
         receiveValue: { data, _ in
-            self.mapper(data, defaults)
+            self.mapper(data, container)
         }
     }
 }

@@ -21,9 +21,9 @@ open class DefaultValueSource: Publisher {
 
     /// Override to read updates to default settings.
     ///
-    /// - parameter defaults: Call the methods on this instance to update the defaults and notify the container when this class has finished reading values.
+    /// - parameter container: Call the methods on this instance to update the defaults and notify the container when this class has finished reading values.
     // swiftformat:disable:next unusedArguments
-    open func readDefaults(_ defaults: Defaultable) {
-        fatalError("💥💥💥 DefaultValueSource.readDefailts(_:) not overrriden 💥💥💥")
+    open func readDefaults(_ container: Defaultable) {
+        fatalError("💥💥💥 DefaultValueSource.readDefaults(_:) not overrriden 💥💥💥")
     }
 }

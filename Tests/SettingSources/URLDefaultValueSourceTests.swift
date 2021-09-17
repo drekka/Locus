@@ -18,10 +18,10 @@ class URLDefaultValueSourceTests: XCTestCase {
         let exp = expectation(description: "Reading config")
 
         let valueSource = URLDefaultValueSource(url: url,
-                                                headers: ["abc": "def"]) { data, defaultable in
+                                                headers: ["abc": "def"]) { data, container in
             let json = try! JSONSerialization.jsonObject(with: data) as! [String: Any]
-            defaultable.setDefault(json["jsonNumber"], forKey: "jsonNumber")
-            defaultable.complete()
+            container.setDefault(json["jsonNumber"], forKey: "jsonNumber")
+            container.complete()
         }
 
         var completion: Subscribers.Completion<Error>?
