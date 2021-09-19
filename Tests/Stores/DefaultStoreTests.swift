@@ -23,7 +23,7 @@ class DefaultStoreTests: XCTestCase {
     }
 
     func testAccessingConfiguration() {
-        expect(self.store.configuration(forKey: "abc")) != nil
+        expect(self.store.configuration(forKey: "abc")).toNot(throwAssertion())
     }
 
     func testAccessingConfiguartionForUnknownKeyFatals() {

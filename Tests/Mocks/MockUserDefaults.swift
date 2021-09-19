@@ -10,27 +10,29 @@ import Locus
 
 // Use this mock because sunchronisation of user defaults is unreliable.
 class MockUserDefaults: Defaults {
-    var registerDefaults: [String: Any]?
+    
+    var defaults: [String: Any] = [:]
+    var registeredDefaults: [String: Any] = [:]
+
     func register(defaults: [String: Any]) {
-        registerDefaults = defaults
+        defaults.forEach { registeredDefaults[$0] = $1 }
     }
 
-    var removeObjectForKey: String?
-    func removeObject(forKey: String) {
-        removeObjectForKey = forKey
+    func removeObject(forKey key: String) {
+        defaults.removeValue(forKey: key)
     }
 
-    var valueForKey: String?
-    var valueForKeyResult: Any?
-    func value(forKey: String) -> Any? {
-        valueForKey = forKey
-        return valueForKeyResult
+    func value(forKey key: String) -> Any? {
+        if let value = defaults[key] {
+            return value
+        }
+        if let value = registeredDefaults[key] {
+            return value
+        }
+        return nil
     }
 
-    var setForKey: String?
-    var setValue: Any?
-    func set(_ value: Any?, forKey: String) {
-        setForKey = forKey
-        setValue = value
+    func set(_ value: Any?, forKey key: String) {
+        defaults[key] = value
     }
 }

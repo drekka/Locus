@@ -16,14 +16,6 @@ public class Setting<T> {
     private let container: () -> SettingsContainer
     private let key: String
 
-    public convenience init<K>(wrappedValue: T, _ key: K, container: @autoclosure @escaping () -> SettingsContainer = SettingsContainer.shared) where K:RawRepresentable, K.RawValue == String {
-        self.init(wrappedValue: wrappedValue, key.rawValue, container: container())
-    }
-
-    public init(wrappedValue _: T, _: String, container _: @autoclosure @escaping () -> SettingsContainer = SettingsContainer.shared) {
-        fatalError("🧩 Setting: Default values cannot be set using the property wrapper. Defaults should be set during registration or loaded from a default value source.")
-    }
-
     public convenience init<K>(_ key: K, container: @autoclosure @escaping () -> SettingsContainer = SettingsContainer.shared) where K: RawRepresentable, K.RawValue == String {
         self.init(key.rawValue, container: container())
     }
