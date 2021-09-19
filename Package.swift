@@ -18,11 +18,13 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "Nimble", url: "https://github.com/quick/nimble", branch: "main"),
+        .package(name: "UsefulThings", url: "https://github.com/drekka/UsefulThings", branch: "main"),
     ],
     targets: [
         .target(
             name: "Locus",
             dependencies: [
+                "UsefulThings"
             ],
             path: "Sources"
         ),

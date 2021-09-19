@@ -27,6 +27,15 @@
           "revision": "92dd63d2dbd9bf5ef733e83febc94f035004573e",
           "version": null
         }
+      },
+      {
+        "package": "UsefulThings",
+        "repositoryURL": "https://github.com/drekka/UsefulThings",
+        "state": {
+          "branch": "main",
+          "revision": "628f89dcc96b8ad01f3e3059efc261e6fa56d1d7",
+          "version": null
+        }
       }
     ]
   },
