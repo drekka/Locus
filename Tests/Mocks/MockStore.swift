@@ -6,44 +6,39 @@
 //
 
 import Locus
+import UsefulThings
 
 class MockStore: Store {
+    
+    var configurations: [String: SettingConfiguration] = [:]
+    var defaults:[String: Any] = [:]
+    var values:[String: Any] = [:]
 
-    var registerConfiguration: SettingConfiguration?
     func register(configuration: SettingConfiguration) {
-        registerConfiguration = configuration
+        configurations[configuration.key] = configuration
     }
 
-    var configurationKey: String?
-    var configurationResult: SettingConfiguration?
     func configuration(forKey key: String) -> SettingConfiguration {
-        configurationKey = key
-        return configurationResult!
+        configurations[key]!
     }
 
-    var setDefaultKey: String?
-    var setDefaultValue: Any?
     func setDefault<T>(_ value: T, forKey key: String) {
-        setDefaultKey = key
-        setDefaultValue = value
+        defaults[key] = value
     }
 
-    var removeKey: String?
     func remove(key: String) {
-        removeKey = key
+        values.removeValue(forKey: key)
     }
 
-    var subscriptKey: String?
-    var subscriptValue: Any?
-    var subscriptResult: Any?
     subscript<T>(key: String) -> T {
         get {
-            subscriptKey = key
-            return subscriptResult as! T
+            if let value:T = cast(values[key]) { return value }
+            if let registeredDefaultValue: T = cast(defaults[key]) { return registeredDefaultValue }
+            if let defaultValue: T = cast(configurations[key]?.defaultValue) { return defaultValue }
+            fatalError("Arrrg!")
         }
         set(newValue) {
-            subscriptKey = key
-            subscriptValue = newValue
+            values[key] = newValue
         }
     }
 }

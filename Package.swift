@@ -18,7 +18,7 @@ let package = Package(
     ],
     dependencies: [
         .package(name: "Nimble", url: "https://github.com/quick/nimble", branch: "main"),
-        .package(name: "UsefulThings", url: "https://github.com/drekka/UsefulThings", branch: "main"),
+        .package(name: "UsefulThings", url: "https://github.com/drekka/UsefulThings", from: "0.0.0"),
     ],
     targets: [
         .target(
@@ -37,6 +37,7 @@ let package = Package(
             resources: [
                 .copy("Test files/Settings.bundle"),
                 .copy("Test files/Missing child pane.bundle"),
+                .copy("Test files/Duplicate keys.bundle"),
                 .copy("Test files/Incorrect setting type.bundle"),
                 .copy("Test files/Bad plist.bundle"),
                 .copy("Test files/Bad plist content.bundle"),

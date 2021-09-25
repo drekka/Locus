@@ -13,108 +13,107 @@ class UserDefaultsStoreTests: XCTestCase {
 
     private let key = "__testKey"
 
-    private var store: UserDefaultsStore!
-    private var mockStore: MockStore!
-    private var mockDefaults: MockUserDefaults!
+    private var userDefaultsStore: UserDefaultsStore!
+    private var mockParentStore: MockStore!
+    private var mockUserDefaults: MockUserDefaults!
 
     override func setUp() {
         super.setUp()
 
-        mockStore = MockStore()
-        mockDefaults = MockUserDefaults()
-        store = UserDefaultsStore(parent: mockStore, defaults: mockDefaults)
+        mockParentStore = MockStore()
+        mockUserDefaults = MockUserDefaults()
+        userDefaultsStore = UserDefaultsStore(parent: mockParentStore, defaults: mockUserDefaults)
     }
 
     func testRegisterPassesThrough() {
         let configuration = SettingConfiguration(key, storage: .userDefaults, default: 5)
-        store.register(configuration: configuration)
-        expect(self.mockStore.registerConfiguration) === configuration
+
+        userDefaultsStore.register(configuration: configuration)
+
+        expect(self.mockParentStore.configurations.count) == 1
+        expect(self.mockParentStore.configurations[self.key]) === configuration
     }
 
     func testConfigurationPassesThrough() {
         let configuration = SettingConfiguration(key, storage: .userDefaults)
-        mockStore.configurationResult = configuration
-        let returnedConfiguration = store.configuration(forKey: key)
+        mockParentStore.configurations[key] = configuration
+
+        let returnedConfiguration = userDefaultsStore.configuration(forKey: key)
+
         expect(returnedConfiguration) === configuration
     }
 
     func testSetDefaultRegistersInUserDefaults() {
-        mockStore.configurationResult = SettingConfiguration(key, storage: .userDefaults)
+        mockParentStore.configurations[key] = SettingConfiguration(key, storage: .userDefaults)
 
-        store.setDefault(10, forKey: key)
-        expect(self.mockDefaults.registerDefaults?[self.key] as? Int) == 10
-        expect(self.mockStore.setDefaultKey) == nil
+        userDefaultsStore.setDefault(10, forKey: key)
+
+        expect(self.mockUserDefaults.registeredDefaults[self.key] as? Int) == 10
+        expect(self.mockUserDefaults.defaults.count) == 0
     }
 
     func testSetDefaultPassesThroughWhenNotAUserDefaultsSetting() {
-        mockStore.configurationResult = SettingConfiguration(key)
+        mockParentStore.configurations[key] = SettingConfiguration(key)
 
-        store.setDefault(10, forKey: key)
-        expect(self.mockDefaults.registerDefaults) == nil
-        expect(self.mockStore.setDefaultKey) == key
-        expect(self.mockStore.setDefaultValue as? Int) == 10
+        userDefaultsStore.setDefault(10, forKey: key)
+
+        expect(self.mockUserDefaults.defaults.count) == 0
+        expect(self.mockParentStore.defaults[self.key] as? Int) == 10
     }
 
     func testRemoveClearsStoredValue() {
-        mockStore.configurationResult = SettingConfiguration(key, storage: .userDefaults)
+        mockParentStore.configurations[key] = SettingConfiguration(key, storage: .userDefaults)
+        mockUserDefaults.defaults[key] = 10
 
-        store.remove(key: key)
-        expect(self.mockDefaults.removeObjectForKey) == key
+        userDefaultsStore.remove(key: key)
+
+        expect(self.mockUserDefaults.defaults.count) == 0
     }
 
     func testRemovePassesThroughWhenNotAUserDefaultsSetting() {
-        mockStore.configurationResult = SettingConfiguration(key)
+        mockParentStore.configurations[key] = SettingConfiguration(key)
+        mockParentStore.values[key] = "xyz"
 
-        store.remove(key: key)
-        expect(self.mockDefaults.removeObjectForKey) == nil
-        expect(self.mockStore.removeKey) == key
+        userDefaultsStore.remove(key: key)
+
+        expect(self.mockParentStore.values.count) == 0
     }
 
     func testGetReadsUserDefaults() {
-        mockStore.configurationResult = SettingConfiguration(key, storage: .userDefaults)
-        mockDefaults.valueForKeyResult = 10
+        mockParentStore.configurations[key] = SettingConfiguration(key, storage: .userDefaults)
+        mockUserDefaults.defaults[key] = 10
 
-        let value: Int = store[key]
-
-        expect(self.mockDefaults.valueForKey) == key
-        expect(value) == 10
+        expect(self.userDefaultsStore[self.key] as Int) == 10
     }
 
     func testGetPassesThroughWhenNotAUserDefaultsSetting() {
-        mockStore.configurationResult = SettingConfiguration(key)
-        mockStore.subscriptResult = 10
+        mockParentStore.configurations[key] = SettingConfiguration(key)
+        mockParentStore.defaults[key] = 10
 
-        let value: Int = store[key]
-
-        expect(self.mockDefaults.valueForKey) == nil
-        expect(value) == 10
+        expect(self.userDefaultsStore[self.key] as Int) == 10
     }
 
     func testGetPassesThroughWhenNoValueFound() {
-        mockStore.configurationResult = SettingConfiguration(key, storage: .userDefaults)
-        mockStore.subscriptResult = 10
+        mockParentStore.configurations[key] = SettingConfiguration(key, storage: .userDefaults)
+        mockParentStore.defaults[key] = 10
 
-        let value: Int = store[key]
-
-        expect(value) == 10
-        expect(self.mockStore.subscriptKey) == key
+        expect(self.userDefaultsStore[self.key] as Int) == 10
     }
 
     func testSetStoresInUserDefaults() {
-        mockStore.configurationResult = SettingConfiguration(key, storage: .userDefaults)
+        mockParentStore.configurations[key] = SettingConfiguration(key, storage: .userDefaults)
 
-        store[key] = 10
-        expect(self.mockDefaults.setValue as? Int) == 10
-        expect(self.mockDefaults.setForKey) == key
+        userDefaultsStore[key] = 10
+
+        expect(self.mockUserDefaults.defaults[self.key] as? Int) == 10
     }
 
     func testSetPassesThroughWhenNotAUserDefaultSetting() {
-        mockStore.configurationResult = SettingConfiguration(key)
+        mockParentStore.configurations[key] = SettingConfiguration(key)
 
-        store[key] = 10
-        expect(self.mockDefaults.setValue) == nil
-        expect(self.mockDefaults.setForKey) == nil
-        expect(self.mockStore.subscriptValue as? Int) == 10
-        expect(self.mockStore.subscriptKey) == key
+        userDefaultsStore[key] = 10
+
+        expect(self.mockUserDefaults.defaults.count) == 0
+        expect(self.mockParentStore.values[self.key] as? Int) == 10
     }
 }

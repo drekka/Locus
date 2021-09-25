@@ -5,48 +5,24 @@
 //  Created by Derek Clarkson on 14/9/21.
 //
 
-import Combine
 @testable import Locus
 import Nimble
 import XCTest
 
 class URLDefaultValueSourceTests: XCTestCase {
 
-    func testReadDefaults() {
+    func testReadDefaults() async throws {
 
         let url = Bundle.testBundle.url(forResource: "Settings", withExtension: "json")!
-        let exp = expectation(description: "Reading config")
-
         let valueSource = URLDefaultValueSource(url: url,
-                                                headers: ["abc": "def"]) { data, container in
+                                                headers: ["abc": "def"]) { data in
             let json = try! JSONSerialization.jsonObject(with: data) as! [String: Any]
-            container.setDefault(json["jsonNumber"], forKey: "jsonNumber")
-            container.complete()
+            return ["jsonNumber": json["jsonNumber"]!]
         }
 
-        var completion: Subscribers.Completion<Error>?
-        var updates: [DefaultValueUpdate] = []
-        let passthroughSubject = PassthroughSubject<DefaultValueUpdate, Error>()
-        let cancellable = passthroughSubject.sink {
-            completion = $0
-            exp.fulfill()
-        }
-        receiveValue: { updates.append($0) }
+        let defaults = try await valueSource.readDefaults()
 
-        valueSource.readDefaults(Defaultable(subject: passthroughSubject))
-
-        waitForExpectations(timeout: 5.0)
-
-        withExtendedLifetime(cancellable) {
-            switch completion {
-            case .finished:
-                break // All good
-            default:
-                fail("Unexpected error: \(String(describing: completion))")
-            }
-            expect(updates.count) == 1
-            expect(updates[0].0) == "jsonNumber"
-            expect(updates[0].1 as? Int) == 10
-        }
+        expect(defaults.count) == 1
+        expect(defaults["jsonNumber"] as? Int) == 10
     }
 }

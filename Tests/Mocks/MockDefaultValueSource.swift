@@ -6,6 +6,7 @@
 //
 
 @testable import Locus
+import UIKit
 
 enum MockDefaultValueSourceError: Error {
     case anError
@@ -13,25 +14,27 @@ enum MockDefaultValueSourceError: Error {
 
 class MockDefaultValueSource: DefaultValueSource {
 
-    private let newDefaults: [(String, Any)]
+    private let name: String
+    private let newDefaults: [String: Any]
     private let error: Error?
+    var log: [(TimeInterval, String)] = []
 
-    init(defaults: [(String, Any)] = [], error: Error? = nil) {
+    init(name: String, defaults: [String: Any] = [:], error: Error? = nil) {
+        self.name = name
         newDefaults = defaults
         self.error = error
-        super.init()
     }
 
-    override func readDefaults(_ defaults: Defaultable) {
-        newDefaults.forEach {
-            defaults.setDefault($0.1, forKey: $0.0)
-        }
+    func readDefaults() async throws -> [String: Any] {
+        log.append((Date.now.timeIntervalSince1970, "\(name) reading"))
+        return try await Task {
+            if let error = error {
+                log.append((Date.now.timeIntervalSince1970, "\(name) error"))
+                throw error
+            }
 
-        if let error = error {
-            defaults.fail(withError: error)
-            return
-        }
-
-        defaults.complete()
+            log.append((Date.now.timeIntervalSince1970, "\(name) returning values"))
+            return newDefaults
+        }.value
     }
 }

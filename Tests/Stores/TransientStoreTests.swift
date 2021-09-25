@@ -11,95 +11,62 @@ import XCTest
 
 class TransientStoreTests: XCTestCase {
 
-    private var mockParent: MockStore!
+    private var mockParentStore: MockStore!
     private var transientStore: TransientStore!
+    private var transient: SettingConfiguration!
+    private var nonTransient: SettingConfiguration!
 
     override func setUp() {
         super.setUp()
-        mockParent = MockStore()
-        transientStore = TransientStore(parent: mockParent)
-    }
+        mockParentStore = MockStore()
+        transient = SettingConfiguration("transient", storage: .transient, default: 5)
+        nonTransient = SettingConfiguration("non-transient", default: 10)
 
-    func testRegisterPassesThrough() {
-        let configuration = SettingConfiguration("abc", default: 5)
-        transientStore.register(configuration: configuration)
-        expect(self.mockParent.registerConfiguration) === configuration
+        transientStore = TransientStore(parent: mockParentStore)
+
+        transientStore.register(configuration: transient)
+        transientStore.register(configuration: nonTransient)
     }
 
     func testConfigurationPassesThrough() {
-        mockParent.configurationResult = SettingConfiguration("abc", default: 5)
-
-        let configuration = transientStore.configuration(forKey: "abc")
-        expect(self.mockParent.configurationKey) == "abc"
-        expect(configuration.key) == "abc"
+        expect(self.mockParentStore.configurations["transient"]) === transient
+        expect(self.mockParentStore.configurations["non-transient"]) === nonTransient
     }
 
-    func testSetDefaultPassesThrough() {
-        transientStore.setDefault(5, forKey: "abc")
-        expect(self.mockParent.setDefaultKey) == "abc"
-        expect(self.mockParent.setDefaultValue as? Int) == 5
+    func testSetDefault() {
+        transientStore.setDefault(50, forKey: "transient")
+        transientStore.setDefault(150, forKey: "non-transient")
+        expect(self.mockParentStore.defaults["transient"] as? Int) == 50
+        expect(self.mockParentStore.defaults["non-transient"] as? Int) == 150
+        expect(self.transientStore["transient"] as Int?) == 50
+        expect(self.transientStore["non-transient"] as Int?) == 150
     }
 
-    func testRemovePassesThroughWhenNotTransient() {
-        mockParent.configurationResult = SettingConfiguration("abc", default: 5)
-        transientStore.remove(key: "abc")
-        expect(self.mockParent.removeKey) == "abc"
+    func testRemove() {
+        mockParentStore.values["non-transient"] = 200
+        transientStore["transient"] = 500
+        expect(self.transientStore["transient"] as Int?) == 500
+        expect(self.transientStore["non-transient"] as Int?) == 200
+
+        transientStore.remove(key: "transient")
+        transientStore.remove(key: "non-transient")
+
+        expect(self.mockParentStore.values.count) == 0
+        expect(self.transientStore["transient"] as Int?) == 5
+        expect(self.transientStore["non-transient"] as Int?) == 10
     }
 
-    func testRemoveClearsTransientValue() {
-
-        mockParent.configurationResult = SettingConfiguration("abc", storage: .transient, default: 5)
-        transientStore["abc"] = 10
-
-        // Remove
-        transientStore.remove(key: "abc")
-        expect(self.mockParent.removeKey) == nil
-        expect(self.mockParent.subscriptKey) == nil
-
-        // Verify transient value is gone by accessing value from parent.
-        mockParent.subscriptResult = 3
-        expect(self.transientStore["abc"] as Int) == 3
-        expect(self.mockParent.removeKey) == nil
-        expect(self.mockParent.subscriptKey) == "abc"
+    func testGet() {
+        transientStore["transient"] = 200
+        expect(self.transientStore["transient"] as Int?) == 200
+        expect(self.transientStore["non-transient"] as Int?) == 10
     }
 
-    func testGetReturnsParentValueWhenNotTransient() {
-        mockParent.subscriptResult = 5
+    func testSet() {
+        transientStore["transient"] = 100
+        transientStore["non-transient"] = 200
 
-        expect(self.transientStore["abc"] as Int) == 5
-        expect(self.mockParent.subscriptKey) == "abc"
-    }
-
-    func testGetReturnsTransientValue() {
-        mockParent.configurationResult = SettingConfiguration("abc", storage: .transient, default: 5)
-        transientStore["abc"] = 10
-        
-        expect(self.transientStore["abc"] as Int) == 10
-        expect(self.mockParent.subscriptKey) == nil
-    }
-
-    func testGetReturnsParentValue() {
-        mockParent.configurationResult = SettingConfiguration("abc", storage: .transient, default: 5)
-        mockParent.subscriptResult = 5
-        
-        expect(self.transientStore["abc"] as Int) == 5
-        expect(self.mockParent.subscriptKey) == "abc"
-    }
-
-    func testSetPasseThroughWhenNotTransient() {
-        mockParent.configurationResult = SettingConfiguration("abc", default: 5)
-        
-        transientStore["abc"] = 10
-        expect(self.mockParent.subscriptKey) == "abc"
-        expect(self.mockParent.subscriptValue as? Int) == 10
-    }
-
-    func testSetStoresValueWhenTransient() {
-        mockParent.configurationResult = SettingConfiguration("abc", storage: .transient, default: 5)
-        
-        transientStore["abc"] = 10
-        expect(self.transientStore["abc"] as Int) == 10
-        expect(self.mockParent.subscriptKey) == nil
-        expect(self.mockParent.subscriptValue) == nil
+        expect(self.transientStore["transient"] as Int?) == 100
+        expect(self.transientStore["non-transient"] as Int?) == 200
     }
 }

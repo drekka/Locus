@@ -102,10 +102,7 @@ class IntegrationTests: XCTestCase {
     func testReadingAJSONFileOfDefaults() {
 
         let url = Bundle.testBundle.url(forResource: "Settings", withExtension: "json")!
-        let source = JSONDefaultValueSource(url: url) { json, defaultValueSender in
-            (json as! [String: Any]).forEach { defaultValueSender.setDefault($0.value, forKey: $0.key) }
-            defaultValueSender.complete()
-        }
+        let source = JSONDefaultValueSource(url: url) { $0 as! [String: Any] }
 
         readDefaultValueSources(source)
 
