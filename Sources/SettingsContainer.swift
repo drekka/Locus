@@ -2,7 +2,6 @@
 //  Created by Derek Clarkson on 7/7/21.
 //
 
-import Combine
 import os
 
 let log = Logger(subsystem: "au.com.derekclarkson.locus", category: "locus")
@@ -22,7 +21,6 @@ public class SettingsContainer {
 
     private var stores: Store
     private var registeredSettings: [String: SettingConfiguration] = [:]
-    private var defaultsSourceCancellable: Cancellable?
 
     // MARK: - Lifecycle
 
@@ -44,21 +42,21 @@ public class SettingsContainer {
 
         // Execute publishers in sequence one at a time.
         log.debug("🧩 SettingsContainer: Reading sources for default values")
-        defaultsSourceCancellable = sources.publisher
-            .flatMap(maxPublishers: .max(1)) { $0 }
-            .sink { result in
-                log.debug("🧩 SettingsContainer: Finished reading default values")
-                self.defaultsSourceCancellable = nil
-                switch result {
-                case .failure(let error):
-                    completion(error)
-                default:
-                    completion(nil)
+        Task {
+            do {
+                for source in sources {
+                    let preferences = try await source.readDefaults()
+                    preferences.enumerated().forEach { _, preference in
+                        log.debug("🧩 SettingsContainer: Stored default value: \(preference.key) -> \(String(describing: preference.value))")
+                        stores.setDefault(preference.value, forKey: preference.key)
+                    }
                 }
+                log.debug("🧩 SettingsContainer: Finished reading default values")
+                completion(nil)
+            } catch {
+                log.debug("🧩 SettingsContainer: Finished reading default values with error \(error.localizedDescription)")
+                completion(error)
             }
-        receiveValue: { defaultValue in
-            self.stores.setDefault(defaultValue.1, forKey: defaultValue.0)
-            log.debug("🧩 SettingsContainer: Stored default value: \(defaultValue.0) -> \(String(describing: defaultValue.1))")
         }
     }
 

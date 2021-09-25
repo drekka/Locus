@@ -11,15 +11,11 @@ public class JSONDefaultValueSource: URLDefaultValueSource {
 
     public init(url: URL,
                 headers: [String: String]? = nil,
-                mapper: @escaping (_ json: Any, _ container: Defaultable) -> Void) {
+                mapper: @escaping (_ json: Any) throws -> [String: Any]) {
         super.init(url: url,
-                   headers: headers) { data, defaults in
-            do {
-                let json = try JSONSerialization.jsonObject(with: data)
-                mapper(json, defaults)
-            } catch {
-                defaults.fail(withError: error)
-            }
+                   headers: headers) { data in
+            let json = try JSONSerialization.jsonObject(with: data)
+            return try mapper(json)
         }
     }
 }

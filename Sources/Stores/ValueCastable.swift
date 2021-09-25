@@ -3,6 +3,7 @@
 //
 
 import UIKit
+import UsefulThings
 
 /// Support protocol for casting to a result type.
 protocol ValueCastable {
@@ -20,15 +21,9 @@ protocol ValueCastable {
 extension ValueCastable {
 
     func cast<T>(_ value: Any, forKey key: String) -> T {
-        if let value = value as? T {
+        if let value = UsefulThings.cast(value) as T? {
             return value
         }
-
-        // if the value is a string and we want a URL try to convert it.
-        if let value = value as? String, T.self == URL.self, let url = URL(string: value) as? T {
-                return url
-        }
-
         fatalError("💥💥💥 Value for key \(key) cannot be cast to a \(T.self) 💥💥💥")
     }
 }
