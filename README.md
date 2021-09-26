@@ -1,5 +1,7 @@
 # Intro
 
+[![.github/workflows/swift.yml](https://github.com/drekka/Locus/actions/workflows/swift.yml/badge.svg?branch=master)](https://github.com/drekka/Locus/actions/workflows/swift.yml)
+
 *Locus* is an API that can help you wrangle your app's settings. Whether hard coded values, `Settings.bundle` preferences, `UserDefaults` and local or remote configuration files, *Locus* can help you mange them by providing a simple API that lets you get on with the business at hand.
 
 *Locus* provides ...
