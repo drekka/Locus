@@ -29,8 +29,8 @@ class TransientStoreTests: XCTestCase {
     }
 
     func testConfigurationPassesThrough() {
-        expect(self.mockParentStore.configurations["transient"]) === transient
-        expect(self.mockParentStore.configurations["non-transient"]) === nonTransient
+        expect(self.transientStore.configuration(forKey: "transient")) === transient
+        expect(self.transientStore.configuration(forKey: "non-transient")) === nonTransient
     }
 
     func testSetDefault() {

@@ -2,10 +2,16 @@
 //  Created by Derek Clarkson on 7/7/21.
 //
 
+import Combine
 import os
+import UIKit
+
+/// A change to a default value.
+public typealias DefaultValueUpdate = (key: String, value: Any)
 
 let log = Logger(subsystem: "au.com.derekclarkson.locus", category: "locus")
 
+/// Provides the ability to register settings.
 @resultBuilder
 public enum SettingsBuilder {
     public static func buildBlock(_ settings: SettingConfiguration...) -> [SettingConfiguration] {
@@ -14,6 +20,8 @@ public enum SettingsBuilder {
 }
 
 /// Singular container used to manage the settings.
+///
+/// All settings must be registered in this container and accessed either via it or the Setting property wrapper.
 public class SettingsContainer {
 
     /// Publically shared container.
@@ -21,10 +29,17 @@ public class SettingsContainer {
 
     private var stores: Store
     private var registeredSettings: [String: SettingConfiguration] = [:]
+    private let defaultValueUpdateSubject = PassthroughSubject<DefaultValueUpdate, Never>()
+
+    /// Provides access to a pubisher which sends updates to default values.
+    public var defaultValueUpdates: AnyPublisher<DefaultValueUpdate, Never> {
+        return defaultValueUpdateSubject.eraseToAnyPublisher()
+    }
 
     // MARK: - Lifecycle
 
-    public init(stores: Store = TransientStore(parent: UserDefaultsStore(parent: DefaultStore()))) {
+    public init(stores: Store = TransientStore(parent: UserDefaultsStore(parent: DefaultStore())),
+                notificationCenter: NotificationCenter = NotificationCenter.default) {
         self.stores = stores
     }
 
@@ -49,6 +64,7 @@ public class SettingsContainer {
                     preferences.enumerated().forEach { _, preference in
                         log.debug("🧩 SettingsContainer: Stored default value: \(preference.key) -> \(String(describing: preference.value))")
                         stores.setDefault(preference.value, forKey: preference.key)
+                        defaultValueUpdateSubject.send((key: preference.key, value: preference.value))
                     }
                 }
                 log.debug("🧩 SettingsContainer: Finished reading default values")

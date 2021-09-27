@@ -8,6 +8,7 @@
 import Locus
 import Nimble
 import XCTest
+import Combine
 
 private enum Key: String {
     case abc
@@ -52,6 +53,33 @@ class SettingsContainerTests: XCTestCase {
         expect(self.mockStore.values.count) == 1
         expect(self.mockStore.values["abc"] as? String) == "xyz"
     }
+    
+    // MARK: - Combine updates
+    
+    func testCombineUpdates() {
+
+
+        var update: DefaultValueUpdate?
+        let cancellable = SettingsContainer.shared.defaultValueUpdates
+            .filter { $0.key == "abc" }
+            .sink { update = $0 }
+        
+        let exp = expectation(description: "defaults")
+        withExtendedLifetime(cancellable) {
+            let valueSource = MockDefaultValueSource(name: "Source", defaults: ["abc": "xyz"])
+            SettingsContainer.shared.read(sources: valueSource) { error in
+                expect(error) == nil
+                exp.fulfill()
+            }
+        }
+        
+        waitForExpectations(timeout: 5.0)
+        
+        expect(update?.key) == "abc"
+        expect(update?.value as? String) == "xyz"
+    }
+    
+    // MARK: - Default value sources
 
     func testReadingDefaultValueSources() {
 

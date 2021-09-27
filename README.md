@@ -265,3 +265,15 @@ Apart from specifying the key of the setting you want to connect to there's real
 let timeout: Double = SettingsContainer.shared[SettingKey.serverTimeout]
 let serverUrl = SettingsContainer.shared["server.url"] as URL
 ```
+
+# Combine
+
+*Locus* is [Swift Combine](https://developer.apple.com/documentation/combine) friend with a publisher being made available through the `defaultValueUpdates`. So if you want to receive updates via a combine you can use it like this:
+
+```swift
+let cancellable = SettingsContainer.shared.defaultValueUpdates
+                      .filter { $0.key == "key_im_interested_in" }
+                      .sink { update in
+                      // do something with the (key: String, value: Any) tuple receieved.
+}
+```  
