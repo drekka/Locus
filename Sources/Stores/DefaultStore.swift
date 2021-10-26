@@ -26,7 +26,12 @@ public class DefaultStore: Store, ValueCastable {
     }
 
     public func setDefault<T>(_ value: T, forKey key: String) {
-        configuration(forKey: key).defaultValue = value
+        let configuration = configuration(forKey: key)
+        guard case .static = configuration.defaultValue else {
+            fatalError("💥💥💥 Key '\(key)' is configured with a default value stored in user defaults. 💥💥💥")
+        }
+        log.debug("🧩 DefaultStore: Setting default \(key) -> \(String(describing: value))")
+        configuration.defaultValue = .static(value)
     }
 
     public func remove(key _: String) {
@@ -35,7 +40,10 @@ public class DefaultStore: Store, ValueCastable {
 
     public subscript<T>(key: String) -> T {
         get {
-            cast(configuration(forKey: key).defaultValue!, forKey: key)
+            if case .static(let value) = configuration(forKey: key).defaultValue {
+                return cast(value, forKey: key)
+            }
+            fatalError("💥💥💥 Key '\(key)' is configured with a default value stored in user defaults. 💥💥💥")
         }
         set {
             fatalError("💥💥💥 DefaultStore is read only. Cannot write a value for '\(key)' 💥💥💥")

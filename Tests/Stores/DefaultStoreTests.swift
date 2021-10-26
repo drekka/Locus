@@ -12,13 +12,15 @@ class DefaultStoreTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
-        let intConfig = SettingConfiguration("abc", default: 5)
+        let intConfig = SettingConfiguration("abc", default: .static(5))
+        let userDefaultsConfig = SettingConfiguration("userDefault", default: .userDefaults)
         store = DefaultStore()
         store.register(configuration: intConfig)
+        store.register(configuration: userDefaultsConfig)
     }
 
     func testDuplicateRegister() {
-        let stringConfig = SettingConfiguration("abc", default: "xyz")
+        let stringConfig = SettingConfiguration("abc", default: .static("xyz"))
         expect(self.store.register(configuration: stringConfig)).to(throwAssertion())
     }
 
@@ -38,6 +40,10 @@ class DefaultStoreTests: XCTestCase {
         expect(_ = self.store["xyz"] as Int).to(throwAssertion())
     }
 
+    func testGettingAValueForUserDefaultsFatals() {
+        expect(_ = self.store["userDefault"] as Int).to(throwAssertion())
+    }
+
     func testStoringAValueFatals() {
         expect(self.store["abc"] = 1).to(throwAssertion())
     }
@@ -49,5 +55,9 @@ class DefaultStoreTests: XCTestCase {
     func testSetDefault() {
         store.setDefault(3, forKey: "abc")
         expect(self.store["abc"] as Int) == 3
+    }
+
+    func testSetDefaultFailsWhenSettingIsStoredInUserDefaults() {
+        expect(self.store.setDefault(3, forKey: "userDefault")).to(throwAssertion())
     }
 }

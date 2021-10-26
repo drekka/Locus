@@ -34,7 +34,7 @@ public class UserDefaultsStore: Store, ValueCastable {
     }
 
     public func setDefault<T>(_ value: T, forKey key: String) {
-        if parent.configuration(forKey: key).storage == .userDefaults {
+        if case .userDefaults = parent.configuration(forKey: key).defaultValue {
             log.debug("🧩 UserDefaultsStore: Setting default for '\(key)'")
             defaults.register(defaults: [key: value])
         } else {
@@ -43,7 +43,7 @@ public class UserDefaultsStore: Store, ValueCastable {
     }
 
     public func remove(key: String) {
-        if parent.configuration(forKey: key).storage == .userDefaults {
+        if parent.configuration(forKey: key).persistence == .userDefaults {
             log.debug("🧩 UserDefaultsStore: removing '\(key)'")
             defaults.removeObject(forKey: key)
         } else {
@@ -53,7 +53,7 @@ public class UserDefaultsStore: Store, ValueCastable {
 
     public subscript<T>(key: String) -> T {
         get {
-            guard parent.configuration(forKey: key).storage == .userDefaults,
+            guard parent.configuration(forKey: key).persistence == .userDefaults,
                   let value = defaults.value(forKey: key) else {
                 return parent[key]
             }
@@ -62,7 +62,7 @@ public class UserDefaultsStore: Store, ValueCastable {
             return cast(value, forKey: key)
         }
         set {
-            if parent.configuration(forKey: key).storage == .userDefaults {
+            if parent.configuration(forKey: key).persistence == .userDefaults {
                 log.debug("🧩 UserDefaultsStore: Storing '\(key)'")
                 defaults.set(newValue, forKey: key)
             } else {

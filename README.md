@@ -85,7 +85,7 @@ Settings are registered by calling the container's `.register(...)` function. It
 ```swift
 SettingsContainer.shared.register {
     SettingConfiguration(SettingKey.serverUrl, default: "http://localhost")
-    SettingConfiguration("server.delay", storage: .userDefaults, default: 1.0)
+    SettingConfiguration("server.delay", persistence: .userDefaults, default: 1.0)
     transient("server.maxRetries", default: 5, releaseLocked: true)
     userDefault("pageSize", default: 20)
 }
@@ -97,12 +97,12 @@ All registrations are ultimately done with instances of `SettingConfiguration`. 
 
 ```swift
 init(_ key: String,
-     storage: Storage = .readonly,
+     persistence: Persistence = .readonly,
      releaseLocked: Bool = false,
      default defaultValue: Any? = nil)
 
 init<K>(_ key: K,
-        storage: Storage = .readonly,
+        persistence: Persistence = .readonly,
         releaseLocked: Bool = false,
         default defaultValue: Any? = nil) where K: RawRepresentable, K.RawValue == String
 ```
@@ -110,7 +110,7 @@ init<K>(_ key: K,
 Where:
 
 * **`key`** - Is the setting's unique key. It can be either a `String` or a string `RawRepresentable` such as a string enum. 
-* **`storage`** - Where updated values are stored, one of:
+* **`persistence`** - Where updated values are stored, one of:
     * **`.readonly`** - The setting cannot be updated. This is the default. 
     * **`.transient`** - The setting can be updated, but the updated values are not preserved when the app is killed. 
     * **`.userDefaults`** - The setting can be updated and the updated value will be stored in `UserDefaults`.
@@ -185,7 +185,7 @@ SettingsContainer.shared.read(sources: SettingsBundleDefaultValueSource()) { err
 
 It's coded to look for preferences in the `Root.plist` file and drill down into child panes if there are any. 
 
-In addition, running this source means you don't have to pass the `default:` arguments when registering because the default values will be read and set in the `UserDefaults` **registration** domain. Providing you either specify `storage: .userDefaults` or use the `userDefaults(...)` convenience function when registering those settings.
+In addition, running this source means you don't have to pass the `default:` arguments when registering because the default values will be read and set in the `UserDefaults` **registration** domain. Providing you either specify `persistence: .userDefaults` or use the `userDefaults(...)` convenience function when registering those settings.
 
 #### `URLDefaultValueSource`
 

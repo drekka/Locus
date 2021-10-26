@@ -2,15 +2,29 @@
 //  Created by Derek Clarkson on 26/7/21.
 //
 
-/// Creates a "read only" setting configuration.
+/// persistence of a setting.
 ///
-/// Readonly settings cannot be updated by the app.
-///
-/// - parameter key: The key to register the config under.
-/// - parameter default: The default value for the setting. If the setting matches a preference with a default value, then you don't need to specifiy it here as long as your run the `SettingBundleDefaultValueSource`.
-/// - returns: A `SettingConfiguration`.
-public func readonly(_ key: String, default: Any? = nil) -> SettingConfiguration {
-    SettingConfiguration(key, default: `default`)
+/// By default a setting is readonly. However these values allow a setting to be updated by specifiying where the updated values can be stored.
+public enum Persistence {
+
+    // Default persistence is that settings cannot be updated.
+    case none
+
+    // Setting updates are stored in a temporary in-memory store.
+    case transient
+
+    // Setting updates are stored in user defaults.
+    case userDefaults
+}
+
+/// Defines where the default value for a setting is expected to be found and therefore where updates to it are stored.
+public enum Default {
+
+    /// The default for the setting will be sourced from the registered defaults in `UserDefaults`.
+    case userDefaults
+
+    /// The default will be a static value stored in the setting's configuration.
+    case `static`(Any)
 }
 
 /// Creates a "read only" setting configuration.
@@ -18,10 +32,21 @@ public func readonly(_ key: String, default: Any? = nil) -> SettingConfiguration
 /// Readonly settings cannot be updated by the app.
 ///
 /// - parameter key: The key to register the config under.
-/// - parameter default: The default value for the setting. If the setting matches a preference with a default value, then you don't need to specifiy it here as long as your run the `SettingBundleDefaultValueSource`.
+/// - parameter default: The default value for the setting.
 /// - returns: A `SettingConfiguration`.
-public func readonly<K>(_ key: K, default: Any? = nil) -> SettingConfiguration where K: RawRepresentable, K.RawValue == String {
-    readonly(key.rawValue, default: `default`)
+public func readonly(_ key: String, default defaultValue: Default) -> SettingConfiguration {
+    SettingConfiguration(key, default: defaultValue)
+}
+
+/// Creates a "read only" setting configuration.
+///
+/// Readonly settings cannot be updated by the app.
+///
+/// - parameter key: The key to register the config under.
+/// - parameter default: The default value for the setting.
+/// - returns: A `SettingConfiguration`.
+public func readonly<K>(_ key: K, default defaultValue: Default) -> SettingConfiguration where K: RawRepresentable, K.RawValue == String {
+    readonly(key.rawValue, default: defaultValue)
 }
 
 /// Creates a transient setting configuration.
@@ -30,10 +55,10 @@ public func readonly<K>(_ key: K, default: Any? = nil) -> SettingConfiguration w
 ///
 /// - parameter key: The key to register the config under.
 /// - parameter releaseLocked: If set to true, specifies that the setting can be updated in debug builds, but not release builds.
-/// - parameter default: The default value for the setting. If the setting matches a preference with a default value, then you don't need to specifiy it here as long as your run the `SettingBundleDefaultValueSource`.
+/// - parameter default: The default value for the setting.
 /// - returns: A `SettingConfiguration`.
-public func transient(_ key: String, releaseLocked: Bool = false, default: Any? = nil) -> SettingConfiguration {
-    SettingConfiguration(key, storage: .transient, releaseLocked: releaseLocked, default: `default`)
+public func transient(_ key: String, releaseLocked: Bool = false, default defaultValue: Default) -> SettingConfiguration {
+    SettingConfiguration(key, persistence: .transient, default: defaultValue, releaseLocked: releaseLocked)
 }
 
 /// Creates a transient setting configuration.
@@ -42,74 +67,77 @@ public func transient(_ key: String, releaseLocked: Bool = false, default: Any? 
 ///
 /// - parameter key: The key to register the config under.
 /// - parameter releaseLocked: If set to true, specifies that the setting can be updated in debug builds, but not release builds.
-/// - parameter default: The default value for the setting. If the setting matches a preference with a default value, then you don't need to specifiy it here as long as your run the `SettingBundleDefaultValueSource`.
+/// - parameter default: The default value for the setting.
 /// - returns: A `SettingConfiguration`.
-public func transient<K>(_ key: K, releaseLocked: Bool = false, default: Any? = nil) -> SettingConfiguration where K: RawRepresentable, K.RawValue == String {
-    transient(key.rawValue, releaseLocked: releaseLocked, default: `default`)
+public func transient<K>(_ key: K, releaseLocked: Bool = false, default defaultValue: Default) -> SettingConfiguration where K: RawRepresentable, K.RawValue == String {
+    transient(key.rawValue, releaseLocked: releaseLocked, default: defaultValue)
+}
+
+/// Creates a setting which stores updates in `UserDefaults` and sources default values from the registered defaults domain.
+///
+/// - parameter key: The key to register the config under.
+/// - parameter releaseLocked: If set to true, specifies that the setting can be updated in debug versions, but not release versions.
+/// - parameter default: The default value for the setting.
+/// - returns: A `SettingConfiguration`.
+public func userDefault(_ key: String, releaseLocked: Bool = false) -> SettingConfiguration {
+    SettingConfiguration(key, persistence: .userDefaults, default: .userDefaults, releaseLocked: releaseLocked)
 }
 
 /// Creates a setting which stores updates in `UserDefaults`.
 ///
 /// - parameter key: The key to register the config under.
 /// - parameter releaseLocked: If set to true, specifies that the setting can be updated in debug versions, but not release versions.
-/// - parameter default: The default value for the setting. If the setting matches a preference with a default value, then you don't need to specifiy it here as long as your run the `SettingBundleDefaultValueSource`.
+/// - parameter default: The default value for the setting.
 /// - returns: A `SettingConfiguration`.
-public func userDefault(_ key: String, releaseLocked: Bool = false, default: Any? = nil) -> SettingConfiguration {
-    SettingConfiguration(key, storage: .userDefaults, releaseLocked: releaseLocked, default: `default`)
-}
-
-/// Creates a setting which stores updates in `UserDefaults`.
-///
-/// - parameter key: The key to register the config under.
-/// - parameter releaseLocked: If set to true, specifies that the setting can be updated in debug versions, but not release versions.
-/// - parameter default: The default value for the setting. If the setting matches a preference with a default value, then you don't need to specifiy it here as long as your run the `SettingBundleDefaultValueSource`.
-/// - returns: A `SettingConfiguration`.
-public func userDefault<K>(_ key: K, releaseLocked: Bool = false, default: Any? = nil) -> SettingConfiguration where K: RawRepresentable, K.RawValue == String {
-    userDefault(key.rawValue, releaseLocked: releaseLocked, default: `default`)
+public func userDefault<K>(_ key: K, releaseLocked: Bool = false) -> SettingConfiguration where K: RawRepresentable, K.RawValue == String {
+    userDefault(key.rawValue, releaseLocked: releaseLocked)
 }
 
 /// Defines the setup of a given setting.
 public class SettingConfiguration {
 
+    /// The unique key of a setting. No two settings can have the same key.
     public let key: String
-    public let storage: Storage
+    
+    /// Defines where any updates to the setting will be stored.
+    public let persistence: Persistence
+    
+    /// If the setting is release locked. Ie. Updatable in Debug builds, readonly in Release builds.
     public let releaseLocked: Bool
+    
+    /// The default value for the setting. This can be updated by loading a new default value from a config file or other source. If there is an updated value for the setting, it will override any default value.
+    public var defaultValue: Default
 
-    /// The setting's default value.
-    ///
-    /// Loading a new value will change this.
-    public var defaultValue: Any!
-
-    /// Default initializer.
+    /// Convenience initialiser that accepts `RawRepresentable` as a setting keys.
     ///
     /// - parameter key: The key to register the config under.
-    /// - parameter storage: The storage of whether the setting can be updated.
-    /// - parameter releaseLocked: If true, the setting cannot be updated in release builds.
-    /// - parameter default: The default value for the setting.
+    /// - parameter persistence: Whether the setting can be updated and where updates are stored. Readonly, transient or user defaults.
+    /// - parameter default: The default value for the setting. This also defines where the default is stored for update purposes.
+    /// - parameter releaseLocked: If true the setting can be updated in Debug builds but not Release builds.
     public convenience init<K>(_ key: K,
-                               storage: Storage = .readonly,
-                               releaseLocked: Bool = false,
-                               default defaultValue: Any? = nil) where K: RawRepresentable, K.RawValue == String {
-        self.init(key.rawValue, storage: storage, releaseLocked: releaseLocked, default: defaultValue)
+                               persistence: Persistence = .none,
+                               default defaultValue: Default,
+                               releaseLocked: Bool = false) where K: RawRepresentable, K.RawValue == String {
+        self.init(key.rawValue, persistence: persistence, default: defaultValue, releaseLocked: releaseLocked)
     }
 
-    /// Default initializer.
+    /// Default initialiser.
     ///
     /// - parameter key: The key to register the config under.
-    /// - parameter storage: The storage of whether the setting can be updated.
-    /// - parameter releaseLocked: If true, the setting cannot be updated in release builds.
-    /// - parameter default: The default value for the setting.
+    /// - parameter persistence: Whether the setting can be updated and where updates are stored. Readonly, transient or user defaults.
+    /// - parameter default: The default value for the setting. This also defines where the default is stored for update purposes.
+    /// - parameter releaseLocked: If true the setting can be updated in Debug builds but not Release builds.
     public init(_ key: String,
-                storage: Storage = .readonly,
-                releaseLocked: Bool = false,
-                default defaultValue: Any? = nil) {
+                persistence: Persistence = .none,
+                default defaultValue: Default,
+                releaseLocked: Bool = false) {
         self.key = key
-        self.storage = storage
+        self.persistence = persistence
         self.releaseLocked = releaseLocked
         self.defaultValue = defaultValue
 
-        if storage == .readonly, releaseLocked {
-            fatalError("💥💥💥 Release locked is not needed for read only settings 💥💥💥")
+        if persistence == .none, releaseLocked {
+            fatalError("💥💥💥 Cannot set release lock on a read only settings '\(key)' 💥💥💥")
         }
     }
 }

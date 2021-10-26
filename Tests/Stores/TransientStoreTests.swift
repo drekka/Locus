@@ -19,8 +19,8 @@ class TransientStoreTests: XCTestCase {
     override func setUp() {
         super.setUp()
         mockParentStore = MockStore()
-        transient = SettingConfiguration("transient", storage: .transient, default: 5)
-        nonTransient = SettingConfiguration("non-transient", default: 10)
+        transient = SettingConfiguration("transient", persistence: .transient, default: .static(5))
+        nonTransient = SettingConfiguration("non-transient", default: .static(10))
 
         transientStore = TransientStore(parent: mockParentStore)
 

@@ -14,8 +14,21 @@ let log = Logger(subsystem: "au.com.derekclarkson.locus", category: "locus")
 /// Provides the ability to register settings.
 @resultBuilder
 public enum SettingsBuilder {
-    public static func buildBlock(_ settings: SettingConfiguration...) -> [SettingConfiguration] {
-        return settings
+
+    public static func buildBlock(_ settings: SettingConfigurationSource...) -> [SettingConfiguration] {
+        settings.flatMap { $0.builtSettings }
+    }
+
+    public static func buildOptional(_ settings: [SettingConfigurationSource]?) -> [SettingConfiguration] {
+        settings?.flatMap { $0.builtSettings } ?? []
+    }
+
+    public static func buildEither(first settings: [SettingConfiguration]) -> [SettingConfiguration] {
+        settings.flatMap { $0.builtSettings }
+    }
+
+    public static func buildEither(second settings: [SettingConfiguration]) -> [SettingConfiguration] {
+        settings.flatMap { $0.builtSettings }
     }
 }
 
@@ -24,14 +37,14 @@ public enum SettingsBuilder {
 /// All settings must be registered in this container and accessed either via it or the Setting property wrapper.
 public class SettingsContainer {
 
-    /// Publically shared container.
+    /// Publicly shared container.
     public static var shared = SettingsContainer()
 
     private var stores: Store
     private var registeredSettings: [String: SettingConfiguration] = [:]
     private let defaultValueUpdateSubject = PassthroughSubject<DefaultValueUpdate, Never>()
 
-    /// Provides access to a pubisher which sends updates to default values.
+    /// Provides access to a publisher which sends updates to default values.
     public var defaultValueUpdates: AnyPublisher<DefaultValueUpdate, Never> {
         return defaultValueUpdateSubject.eraseToAnyPublisher()
     }
@@ -39,20 +52,20 @@ public class SettingsContainer {
     // MARK: - Lifecycle
 
     public init(stores: Store = TransientStore(parent: UserDefaultsStore(parent: DefaultStore())),
-                notificationCenter: NotificationCenter = NotificationCenter.default) {
+                notificationCenter _: NotificationCenter = NotificationCenter.default) {
         self.stores = stores
     }
 
     /// Loads settings from a list of sources.
     ///
-    /// - parameter sources: A list of sources where settings can be obtianed, in the order you want them to be read.
+    /// - parameter sources: A list of sources where settings can be obtained, in the order you want them to be read.
     public func read(sources: DefaultValueSource..., completion: @escaping (Error?) -> Void) {
         read(sources: sources, completion: completion)
     }
 
     /// Loads settings from a list of sources.
     ///
-    /// - parameter sources: A list of sources where settings can be obtianed, in the order you want them to be read.
+    /// - parameter sources: A list of sources where settings can be obtained, in the order you want them to be read.
     public func read(sources: [DefaultValueSource], completion: @escaping (Error?) -> Void) {
 
         // Execute publishers in sequence one at a time.
