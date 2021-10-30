@@ -3,7 +3,7 @@ name: Build pushed changes
 on:
   push:
   pull_request:
-    branches: [ master ]
+    branches: [ master, develop ]
 
 jobs:
   build:
@@ -12,10 +12,10 @@ jobs:
 
     steps:
     - uses: fwal/setup-swift@v1
+      with:
+        swift-version: "5.5"
     - name: Get swift version
       run: swift --version
-      with: 
-        swift-version: "5.5"
     - uses: actions/checkout@v2
     - name: Build
       run: swift build -v
