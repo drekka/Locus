@@ -12,8 +12,8 @@ jobs:
 
     steps:
     - uses: fwal/setup-swift@v1
-      with:
-        swift-version: "5.5"
+#      with:
+#        swift-version: "5.5"
     - name: Get swift version
       run: swift --version
     - uses: actions/checkout@v2
