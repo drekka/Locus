@@ -2,72 +2,76 @@
 
 [![.github/workflows/swift.yml](https://github.com/drekka/Locus/actions/workflows/swift.yml/badge.svg?branch=master)](https://github.com/drekka/Locus/actions/workflows/swift.yml)
 
-*Locus* is an API that can help you wrangle your app's settings. Whether hard coded values, `Settings.bundle` preferences, `UserDefaults` and local or remote configuration files, *Locus* can help you mange them by providing a simple API that lets you get on with the business at hand.
+*Locus* is a useful API that helps to wrangle your app's settings. it coordinates between hard coded values, `Settings.bundle` preferences, `UserDefaults` and local or remote configuration files whilst at the same time providing a consistent API to let you get on writing the business at hand.
 
-*Locus* provides ...
+Essentially *Locus* provides ...
 
-* A consistently simple API for retrieving settings regardless of where they came from.
-* Multiple classes for sourcing values from  `UserDefaults`, `Settings.bundle` preferences, local files, remote files and other sources unique to your app.
-* The ability to enforce rules about where and when settings can be updated.
-* Built in linting of setting keys to help avoid typos.
+* A consistent and simple API for retrieving and updating settings regardless of where they came from.
+* A set of implementations that let you source settings values from `UserDefaults`, `Settings.bundle` preferences, local files, remote files and other sources unique to your app in an easy to use manner.
+* Features for defining where updates to settings are stored and whether they can be updated at all.
+* A built in Combine publisher for subscribing to updates to values.
+* Support for using both `String` and enum based keys for settings.
+* Immediate feedback if you try and access an unknown setting, or set a value on one that's defined as read only.
 
 # Core concepts
 
 ## The Container
 
-*Locus* is architected around a central container for managing settings. Generally you don't need to deal with the container apart from initial setup because from there on *Locus* provides a property wrapper for easy access to settings. 
+*Locus* is architected around a central container for managing settings. The container is where you register settings with their default values and load default values from external sources such as remote configuration files. When accessing setting values you can use the container if you need to, but you can also access settings via a supplied property wrapper.
 
 ## Current value vs Default values
 
-Every setting has two values. Similar to `UserDefaults` where there is a registered value and current value, *Locus* provides *default values* and *current values*. *Default values* are those initially setup, then overlaid with values from various sources as they are read. *Current values* are any settings which can be updated, either externally or internally. Application preferences accessed through `UserDefaults` are a good example of those.
-
-*Note: *Locus* differs from `UserDefaults`  in that settings always have a value and it's API does not return optionals.*
+Similar to `UserDefaults` where there is a registered default and current value for any given setting, *Locus* has a *default value* and a *current value*. But unlike `UserDefaults`, *Locus* always guarantees a value for any registered setting. Either the *Default value* which can be updated with values from various sources such as `Settings.bundle` files or remote configurations, or *Current values* if your app has stored such a value. 
 
 ## Setting keys
 
-Every setting in *Locus* has a **key**. This is facilitate matching settings from various sources and to also allow for typos. These keys are passed to every function that works with settings and can be either a `String` or an implementation of `RawRepresentable` where the `RawValue` type is `String`. In other words, a string enum. It doesn't matter which, *Locus* will know what to do.
+Every setting in *Locus* has a **key**. This uniquely identifies the setting and is used when updating defaults from external sources. Keys also allow for typo to be detected by *Locus* during development. A key can be either a `String` or an implementation of `RawRepresentable` where the `RawValue` type is `String`. In other words, a string enum. It doesn't matter which you choose to use, either, or, or both, *Locus* has overrides for every function that takes a key and will know what to do.
 
 # Quick guide
 
 ## Step 1: Register your settings in your app startup
 
-Before a setting can be accessed it must be registered. This is where the setting's initial default value is set, and where various other attributes controlling how it is accessed are defined. Registering also allows *Locus* to find miss-typed setting keys which it highlights to the developer by triggering a `fatalError(...)` the moment it notices a typo. 
+The first thing to do is register your settings. You do this in the container, registering each setting along with various other attributes that control how it is accessed.
 
 ```swift
 // Somewhere in your startup. App delegate for example.
+
+// Enum based keys if you prefer them.
 enum SettingKey: String {
     case serverTimeout = "server.timeout"
     case serverUrl = "server.url"
 }
 
 SettingsContainer.shared.register {
-    readonly(SettingKey.serverTimeout, default: 30.0)
-    readonly("server.retries", default: 5)
-    userDefault(SettingKey.serverUrl, releaseLocked: true)
+    readonly(SettingKey.serverTimeout, default: .userDefaults)
+    readonly("server.retries", default: .local(5))
+    userDefault(SettingKey.serverUrl)
 }
 ```
 
-As you can see the API can take setting keys as either `String` values or `RawRepresentable` string values. You'll also notice that the example `server.url` setting does not have a default value. That's because settings which have defaults loaded from `Setting.bundle` preferences don't need to specify a default when registering.
+As you can see the API can take setting keys as either `String` values or `RawRepresentable` string values. You'll also notice that the example `server.url` setting does not have a default value. That's because settings which have defaults loaded from `Setting.bundle` preferences don't need to specify a default when registering. Lots more on registering settings below.
 
 ## Step 2: Add loaders to gather default values
 
-After registering your settings you need to update the default values from various sources you may have such as `Settings.bundle` files, remote configuration files, etc. This is done through passing one or more implementations of `DefaultValueSource` to the container's `.read(...)` function like this:
+After registering your settings you *may* need to update the default values from one or more sources such as `Settings.bundle` files, remote configuration files, etc. This is done by passing one or more implementations of `DefaultValueSource` to the container's `.read(...)` function like this:
 
 ```swift
 SettingsContainer.shared.read(sources: SettingsBundleDefaultValueSource()) { error in
     // Check error here.
-    }
+}
 ```
 
-## Step 3: Add `@Setting` property wrappers to your properties
+## Step 3: Add `@Setting` property wrappers or access the container for settings
 
-Finally you need to access the values of your settings in the rest of your app. You can retrieve values directly from the container, but the simplest methods is to use the supplied property wrapper:
+Finally you're ready to access your settings. You can retrieve values directly from the container like this:
+
+```swift
+let url: URL = SettingsContainer.shared[SettingKey.serverUrl]
+```
+or... use the provided property wrapper like this:
 
 ```swift
 class SomeClass {
-
-    @Setting(SettingKey.serverTimeout)
-    var timeout: Double
 
     @Setting(SettingKey.serverUrl)
     var serverUrl: URL
@@ -80,14 +84,14 @@ class SomeClass {
 
 ## Registering settings
 
-Settings are registered by calling the container's `.register(...)` function. It's defined as a Swift 5 [result builder](https://docs.swift.org/swift-book/LanguageGuide/AdvancedOperators.html#ID630) so registering settings is pretty easy:
+Settings are registered by calling the container's `.register(...)` function. It's defined as a Swift 5 [result builder](https://docs.swift.org/swift-book/LanguageGuide/AdvancedOperators.html#ID630) so registering settings is pretty easy.
 
 ```swift
 SettingsContainer.shared.register {
-    SettingConfiguration(SettingKey.serverUrl, default: "http://localhost")
-    SettingConfiguration("server.delay", persistence: .userDefaults, default: 1.0)
-    transient("server.maxRetries", default: 5, releaseLocked: true)
-    userDefault("pageSize", default: 20)
+    SettingConfiguration(SettingKey.serverUrl, default: .local("http://localhost"))
+    SettingConfiguration("server.delay", persistence: .userDefaults, default: .local(1.0))
+    transient("server.maxRetries", releaseLocked: true, default: .local(5))
+    userDefault("pageSize")
 }
 ``` 
 
@@ -97,36 +101,41 @@ All registrations are ultimately done with instances of `SettingConfiguration`. 
 
 ```swift
 init(_ key: String,
-     persistence: Persistence = .readonly,
+     persistence: Persistence = .none,
      releaseLocked: Bool = false,
-     default defaultValue: Any? = nil)
+     default defaultValue: Default)
 
 init<K>(_ key: K,
-        persistence: Persistence = .readonly,
+        persistence: Persistence = .none,
         releaseLocked: Bool = false,
-        default defaultValue: Any? = nil) where K: RawRepresentable, K.RawValue == String
+        default defaultValue: Default) where K: RawRepresentable, K.RawValue == String
 ```
 
 Where:
 
 * **`key`** - Is the setting's unique key. It can be either a `String` or a string `RawRepresentable` such as a string enum. 
 * **`persistence`** - Where updated values are stored, one of:
-    * **`.readonly`** - The setting cannot be updated. This is the default. 
+    * **`.none`** - The setting cannot be updated. This is the default. 
     * **`.transient`** - The setting can be updated, but the updated values are not preserved when the app is killed. 
     * **`.userDefaults`** - The setting can be updated and the updated value will be stored in `UserDefaults`.
 * **`releasedLocked`** - If true, indicates that the setting can be updated in Debug builds, but is read only in Release builds. 
-* **`default`** - The default value for the settings. 
+* **`default`** - The default value for the settings. This enum is either `.local(<value>)` indicating a value stored in memory whilst the app is running, or `.userDefaults` indicating that the value is expected to be found in the registration domain of `UserDefaults`.
 
 ### Convenience functions
 
 In addition to creating `SettingConfiguration` instances, *Locus* also offers a range of convenience functions:
+
+#### readonly(...)
+
+The read only functions are short cuts that produce `SettingConfiguration` instances which cannot be updated by your app.
 
 ```swift
 func readonly(_ key: String, default: Any? = nil) -> SettingConfiguration
 func readonly<K>(_ key: K, default: Any? = nil) -> SettingConfiguration where K: RawRepresentable, K.RawValue == String
 ```
 
-Produce readonly configurations where a setting can only be read but never updated. 
+#### transient(...)
+
 
 ```swift
 func transient(_ key: String, releaseLocked: Bool = false, default: Any? = nil) -> SettingConfiguration

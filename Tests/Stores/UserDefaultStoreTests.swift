@@ -26,7 +26,7 @@ class UserDefaultsStoreTests: XCTestCase {
     }
 
     func testRegisterPassesThrough() {
-        let configuration = SettingConfiguration(key, persistence: .userDefaults, default: .static(5))
+        let configuration = SettingConfiguration(key, persistence: .userDefaults, default: .local(5))
 
         userDefaultsStore.register(configuration: configuration)
 
@@ -53,7 +53,7 @@ class UserDefaultsStoreTests: XCTestCase {
     }
 
     func testSetDefaultPassesThroughWhenNotAUserDefaultsSetting() {
-        mockParentStore.configurations[key] = SettingConfiguration(key, default: .static(5))
+        mockParentStore.configurations[key] = SettingConfiguration(key, default: .local(5))
 
         userDefaultsStore.setDefault(10, forKey: key)
 
@@ -62,7 +62,7 @@ class UserDefaultsStoreTests: XCTestCase {
     }
 
     func testRemoveClearsStoredValue() {
-        mockParentStore.configurations[key] = SettingConfiguration(key, persistence: .userDefaults, default: .static(5))
+        mockParentStore.configurations[key] = SettingConfiguration(key, persistence: .userDefaults, default: .local(5))
         mockUserDefaults.defaults[key] = 10
 
         userDefaultsStore.remove(key: key)
@@ -71,7 +71,7 @@ class UserDefaultsStoreTests: XCTestCase {
     }
 
     func testRemovePassesThroughWhenNotAUserDefaultsSetting() {
-        mockParentStore.configurations[key] = SettingConfiguration(key, default: .static(5))
+        mockParentStore.configurations[key] = SettingConfiguration(key, default: .local(5))
         mockParentStore.values[key] = "xyz"
 
         userDefaultsStore.remove(key: key)
@@ -80,28 +80,28 @@ class UserDefaultsStoreTests: XCTestCase {
     }
 
     func testGetReadsUserDefaults() {
-        mockParentStore.configurations[key] = SettingConfiguration(key, persistence: .userDefaults, default: .static(5))
+        mockParentStore.configurations[key] = SettingConfiguration(key, persistence: .userDefaults, default: .local(5))
         mockUserDefaults.defaults[key] = 10
 
         expect(self.userDefaultsStore[self.key] as Int) == 10
     }
 
     func testGetPassesThroughWhenNotAUserDefaultsSetting() {
-        mockParentStore.configurations[key] = SettingConfiguration(key, default: .static(5))
+        mockParentStore.configurations[key] = SettingConfiguration(key, default: .local(5))
         mockParentStore.defaults[key] = 10
 
         expect(self.userDefaultsStore[self.key] as Int) == 10
     }
 
     func testGetPassesThroughWhenNoValueFound() {
-        mockParentStore.configurations[key] = SettingConfiguration(key, persistence: .userDefaults, default: .static(5))
+        mockParentStore.configurations[key] = SettingConfiguration(key, persistence: .userDefaults, default: .local(5))
         mockParentStore.defaults[key] = 10
 
         expect(self.userDefaultsStore[self.key] as Int) == 10
     }
 
     func testSetStoresInUserDefaults() {
-        mockParentStore.configurations[key] = SettingConfiguration(key, persistence: .userDefaults, default: .static(5))
+        mockParentStore.configurations[key] = SettingConfiguration(key, persistence: .userDefaults, default: .local(5))
 
         userDefaultsStore[key] = 10
 
@@ -109,7 +109,7 @@ class UserDefaultsStoreTests: XCTestCase {
     }
 
     func testSetPassesThroughWhenNotAUserDefaultSetting() {
-        mockParentStore.configurations[key] = SettingConfiguration(key, default: .static(5))
+        mockParentStore.configurations[key] = SettingConfiguration(key, default: .local(5))
 
         userDefaultsStore[key] = 10
 

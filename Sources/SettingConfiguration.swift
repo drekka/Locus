@@ -23,8 +23,8 @@ public enum Default {
     /// The default for the setting will be sourced from the registered defaults in `UserDefaults`.
     case userDefaults
 
-    /// The default will be a static value stored in the setting's configuration.
-    case `static`(Any)
+    /// The default will be the hard coded value stored in setting's configuration in memory.
+    case local(Any)
 }
 
 /// Creates a "read only" setting configuration.
@@ -58,7 +58,7 @@ public func readonly<K>(_ key: K, default defaultValue: Default) -> SettingConfi
 /// - parameter default: The default value for the setting.
 /// - returns: A `SettingConfiguration`.
 public func transient(_ key: String, releaseLocked: Bool = false, default defaultValue: Default) -> SettingConfiguration {
-    SettingConfiguration(key, persistence: .transient, default: defaultValue, releaseLocked: releaseLocked)
+    SettingConfiguration(key, persistence: .transient, releaseLocked: releaseLocked, default: defaultValue)
 }
 
 /// Creates a transient setting configuration.
@@ -80,7 +80,7 @@ public func transient<K>(_ key: K, releaseLocked: Bool = false, default defaultV
 /// - parameter default: The default value for the setting.
 /// - returns: A `SettingConfiguration`.
 public func userDefault(_ key: String, releaseLocked: Bool = false) -> SettingConfiguration {
-    SettingConfiguration(key, persistence: .userDefaults, default: .userDefaults, releaseLocked: releaseLocked)
+    SettingConfiguration(key, persistence: .userDefaults, releaseLocked: releaseLocked, default: .userDefaults)
 }
 
 /// Creates a setting which stores updates in `UserDefaults`.
@@ -98,13 +98,13 @@ public class SettingConfiguration {
 
     /// The unique key of a setting. No two settings can have the same key.
     public let key: String
-    
+
     /// Defines where any updates to the setting will be stored.
     public let persistence: Persistence
-    
+
     /// If the setting is release locked. Ie. Updatable in Debug builds, readonly in Release builds.
     public let releaseLocked: Bool
-    
+
     /// The default value for the setting. This can be updated by loading a new default value from a config file or other source. If there is an updated value for the setting, it will override any default value.
     public var defaultValue: Default
 
@@ -116,9 +116,9 @@ public class SettingConfiguration {
     /// - parameter releaseLocked: If true the setting can be updated in Debug builds but not Release builds.
     public convenience init<K>(_ key: K,
                                persistence: Persistence = .none,
-                               default defaultValue: Default,
-                               releaseLocked: Bool = false) where K: RawRepresentable, K.RawValue == String {
-        self.init(key.rawValue, persistence: persistence, default: defaultValue, releaseLocked: releaseLocked)
+                               releaseLocked: Bool = false,
+                               default defaultValue: Default) where K: RawRepresentable, K.RawValue == String {
+        self.init(key.rawValue, persistence: persistence, releaseLocked: releaseLocked, default: defaultValue)
     }
 
     /// Default initialiser.
@@ -129,8 +129,8 @@ public class SettingConfiguration {
     /// - parameter releaseLocked: If true the setting can be updated in Debug builds but not Release builds.
     public init(_ key: String,
                 persistence: Persistence = .none,
-                default defaultValue: Default,
-                releaseLocked: Bool = false) {
+                releaseLocked: Bool = false,
+                default defaultValue: Default) {
         self.key = key
         self.persistence = persistence
         self.releaseLocked = releaseLocked

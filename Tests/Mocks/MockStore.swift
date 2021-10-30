@@ -34,7 +34,7 @@ class MockStore: Store {
         get {
             if let value: T = cast(values[key]) { return value }
             if let registeredDefaultValue: T = cast(defaults[key]) { return registeredDefaultValue }
-            if case .static(let value) = configurations[key]?.defaultValue,
+            if case .local(let value) = configurations[key]?.defaultValue,
                let castValue = cast(value) as T? {
                 return castValue
             }

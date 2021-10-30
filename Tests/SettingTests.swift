@@ -34,7 +34,7 @@ class SettingTests: XCTestCase {
         mockStore = MockStore()
         SettingsContainer.shared = SettingsContainer(stores: mockStore)
         SettingsContainer.shared.register {
-            transient("abc", default: .static(5))
+            transient("abc", default: .local(5))
         }
     }
     

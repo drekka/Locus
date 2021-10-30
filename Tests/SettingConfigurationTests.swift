@@ -13,38 +13,38 @@ private enum Key: String {
 class SettingConfigurationTests: XCTestCase {
 
     func testInitializer() {
-        let config = SettingConfiguration("abc", persistence: .none, default: .static(5), releaseLocked: false)
+        let config = SettingConfiguration("abc", persistence: .none, releaseLocked: false, default: .local(5))
         validate(config, expectedPersistence: .none)
     }
 
     func testInitializerWithEnum() {
-        let config = SettingConfiguration(Key.abc, persistence: .none, default: .static(5), releaseLocked: false)
+        let config = SettingConfiguration(Key.abc, persistence: .none, releaseLocked: false, default: .local(5))
         validate(config, expectedPersistence: .none)
     }
 
     func testReadonlyAndReleaseLockedFatals() {
-        expect(SettingConfiguration("abc", persistence: .none, default: .static(5), releaseLocked: true)).to(throwAssertion())
+        expect(SettingConfiguration("abc", persistence: .none, releaseLocked: true, default: .local(5))).to(throwAssertion())
     }
 
     // MARK; - Convenience functions.
 
     func testReadonlyConvenienceFunction() {
-        let config = readonly("abc", default: .static(5))
+        let config = readonly("abc", default: .local(5))
         validate(config, expectedPersistence: .none)
     }
 
     func testReadonlyWithenumConvenienceFunction() {
-        let config = readonly(Key.abc, default: .static(5))
+        let config = readonly(Key.abc, default: .local(5))
         validate(config, expectedPersistence: .none)
     }
 
     func testTransientConvenienceFunction() {
-        let config = transient("abc", default: .static(5))
+        let config = transient("abc", default: .local(5))
         validate(config, expectedPersistence: .transient)
     }
 
     func testTransientWithEnumConvenienceFunction() {
-        let config = transient(Key.abc, default: .static(5))
+        let config = transient(Key.abc, default: .local(5))
         validate(config, expectedPersistence: .transient)
     }
 
@@ -57,10 +57,10 @@ class SettingConfigurationTests: XCTestCase {
         let config = userDefault(Key.abc)
         validate(config, expectedPersistence: .userDefaults, expectedDefault: .userDefaults)
     }
-    
+
     // MARK: - Internal
 
-    private func validate(_ configuration: SettingConfiguration, expectedPersistence: Persistence, expectedDefault: Default = .static(5)) {
+    private func validate(_ configuration: SettingConfiguration, expectedPersistence: Persistence, expectedDefault: Default = .local(5)) {
 
         expect(configuration.key) == "abc"
         expect(configuration.persistence) == expectedPersistence
@@ -68,7 +68,7 @@ class SettingConfigurationTests: XCTestCase {
 
         switch (configuration.defaultValue, expectedDefault) {
 
-        case (.static(let value), .static(let expected)):
+        case (.local(let value), .local(let expected)):
             expect(value as? Int) == expected as! Int
 
         case (.userDefaults, .userDefaults):

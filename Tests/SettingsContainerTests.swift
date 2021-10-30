@@ -16,7 +16,7 @@ private enum Key: String {
 
 extension Array where Element == SettingConfiguration {
     static func transientX() -> SettingConfiguration {
-        transient("abc", default: .static("xyz"))
+        transient("abc", default: .local("xyz"))
     }
 }
 
@@ -34,7 +34,7 @@ class SettingsContainerTests: XCTestCase {
 
     func testRegistering() {
         SettingsContainer.shared.register {
-            transient("abc", default: .static("xyz"))
+            transient("abc", default: .local("xyz"))
         }
         expect(self.mockStore.configurations.count) == 1
         expect(self.mockStore.configurations["abc"]) != nil
@@ -45,10 +45,10 @@ class SettingsContainerTests: XCTestCase {
         let dontDoIt = false
         SettingsContainer.shared.register {
             if doIt {
-                transient("abc", default: .static("xyz"))
+                transient("abc", default: .local("xyz"))
             }
             if dontDoIt {
-                transient("def", default: .static("123"))
+                transient("def", default: .local("123"))
             }
         }
         expect(self.mockStore.configurations.count) == 1
@@ -60,14 +60,14 @@ class SettingsContainerTests: XCTestCase {
         let dontDoIt = false
         SettingsContainer.shared.register {
             if doIt {
-                transient("abc1", default: .static("xyz"))
+                transient("abc1", default: .local("xyz"))
             } else {
-                transient("def1", default: .static("123"))
+                transient("def1", default: .local("123"))
             }
             if dontDoIt {
-                transient("abc2", default: .static("xyz"))
+                transient("abc2", default: .local("xyz"))
             } else {
-                transient("def2", default: .static("123"))
+                transient("def2", default: .local("123"))
             }
         }
         expect(self.mockStore.configurations.count) == 2
@@ -163,7 +163,7 @@ class SettingsContainerTests: XCTestCase {
 
     func testReadingMultipleDefaultValueSources() {
         SettingsContainer.shared.register {
-            transient("abc", default: .static(0))
+            transient("abc", default: .local(0))
         }
 
         var log: [(TimeInterval, String)] = []
