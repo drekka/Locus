@@ -18,8 +18,8 @@ jobs:
       run: swift --version
     - uses: actions/checkout@v2
     - name: Build
-      run: xcodebuild -scheme Locus -destination 'platform=iOS Simulator,OS=15.2,name=iPhone 12' build
+      run: xcodebuild -scheme Locus -destination 'platform=iOS Simulator,OS=15.0,name=iPhone 12' build
 
     - name: Run tests
-      run: xcodebuild -scheme Locus -destination 'platform=iOS Simulator,OS=15.2,name=iPhone 12' test
+      run: xcodebuild -scheme Locus -destination 'platform=iOS Simulator,OS=15.0,name=iPhone 12' test
 
