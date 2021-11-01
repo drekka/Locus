@@ -5,13 +5,19 @@
 //  Created by Derek Clarkson on 15/9/21.
 //
 
+import Combine
 import Locus
 import Nimble
 import XCTest
-import Combine
 
 private enum Key: String {
     case abc
+}
+
+extension Array where Element == SettingConfiguration {
+    static func transientX() -> SettingConfiguration {
+        transient("abc", default: .local("xyz"))
+    }
 }
 
 class SettingsContainerTests: XCTestCase {
@@ -23,14 +29,53 @@ class SettingsContainerTests: XCTestCase {
         mockStore = MockStore()
         SettingsContainer.shared = SettingsContainer(stores: mockStore)
     }
+    
+    // MARK: - Registering
 
     func testRegistering() {
         SettingsContainer.shared.register {
-            transient("abc", default: "xyz")
+            transient("abc", default: .local("xyz"))
         }
         expect(self.mockStore.configurations.count) == 1
         expect(self.mockStore.configurations["abc"]) != nil
     }
+    
+    func testOptionalRegistration() {
+        let doIt = true
+        let dontDoIt = false
+        SettingsContainer.shared.register {
+            if doIt {
+                transient("abc", default: .local("xyz"))
+            }
+            if dontDoIt {
+                transient("def", default: .local("123"))
+            }
+        }
+        expect(self.mockStore.configurations.count) == 1
+        expect(self.mockStore.configurations["abc"]) != nil
+    }
+
+    func testThenElseRegistration() {
+        let doIt = true
+        let dontDoIt = false
+        SettingsContainer.shared.register {
+            if doIt {
+                transient("abc1", default: .local("xyz"))
+            } else {
+                transient("def1", default: .local("123"))
+            }
+            if dontDoIt {
+                transient("abc2", default: .local("xyz"))
+            } else {
+                transient("def2", default: .local("123"))
+            }
+        }
+        expect(self.mockStore.configurations.count) == 2
+        expect(self.mockStore.configurations["abc1"]) != nil
+        expect(self.mockStore.configurations["def2"]) != nil
+    }
+
+    // MARK: - Getting values
 
     func testGettingValue() {
         mockStore.values["abc"] = "xyz"
@@ -53,17 +98,16 @@ class SettingsContainerTests: XCTestCase {
         expect(self.mockStore.values.count) == 1
         expect(self.mockStore.values["abc"] as? String) == "xyz"
     }
-    
-    // MARK: - Combine updates
-    
-    func testCombineUpdates() {
 
+    // MARK: - Combine updates
+
+    func testCombineUpdates() {
 
         var update: DefaultValueUpdate?
         let cancellable = SettingsContainer.shared.defaultValueUpdates
             .filter { $0.key == "abc" }
             .sink { update = $0 }
-        
+
         let exp = expectation(description: "defaults")
         withExtendedLifetime(cancellable) {
             let valueSource = MockDefaultValueSource(name: "Source", defaults: ["abc": "xyz"])
@@ -72,13 +116,13 @@ class SettingsContainerTests: XCTestCase {
                 exp.fulfill()
             }
         }
-        
+
         waitForExpectations(timeout: 5.0)
-        
+
         expect(update?.key) == "abc"
         expect(update?.value as? String) == "xyz"
     }
-    
+
     // MARK: - Default value sources
 
     func testReadingDefaultValueSources() {
@@ -116,14 +160,14 @@ class SettingsContainerTests: XCTestCase {
         default: fail("Error not returned")
         }
     }
-    
+
     func testReadingMultipleDefaultValueSources() {
         SettingsContainer.shared.register {
-            transient("abc", default: 0)
+            transient("abc", default: .local(0))
         }
 
         var log: [(TimeInterval, String)] = []
-        
+
         log.append((Date.now.timeIntervalSince1970, "Initing s1"))
         let source1 = MockDefaultValueSource(name: "s1", defaults: ["abc": 5])
         log.append((Date.now.timeIntervalSince1970, "Initing s2"))
@@ -133,14 +177,14 @@ class SettingsContainerTests: XCTestCase {
 
         let exp = expectation(description: "logs")
         log.append((Date.now.timeIntervalSince1970, "Reading sources"))
-        SettingsContainer.shared.read(sources: source1, source2, source3) { error in
+        SettingsContainer.shared.read(sources: source1, source2, source3) { _ in
             log.append((Date.now.timeIntervalSince1970, "Sources read"))
             exp.fulfill()
         }
         log.append((Date.now.timeIntervalSince1970, "Reading done"))
 
         waitForExpectations(timeout: 5.0)
-        
+
         let mergedLog = (source1.log + log + source3.log + source2.log).sorted { $0.0 < $1.0 }.map { $0.1 }
         expect(mergedLog) == [
             "Initing s1",
@@ -154,9 +198,7 @@ class SettingsContainerTests: XCTestCase {
             "s2 returning values",
             "s3 reading",
             "s3 returning values",
-            "Sources read"
+            "Sources read",
         ]
-        
-        
     }
 }

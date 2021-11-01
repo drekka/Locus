@@ -25,7 +25,7 @@ public class TransientStore: Store, ValueCastable {
     }
 
     public func remove(key: String) {
-        if parent.configuration(forKey: key).storage == .transient {
+        if parent.configuration(forKey: key).persistence == .transient {
             log.debug("🧩 TransientStore: Removing value for '\(key)'")
             transientValues.removeValue(forKey: key)
         } else {
@@ -43,7 +43,7 @@ public class TransientStore: Store, ValueCastable {
             return parent[key]
         }
         set {
-            if parent.configuration(forKey: key).storage == .transient {
+            if parent.configuration(forKey: key).persistence == .transient {
                 log.debug("🧩 TransientStore: Storing value for key '\(key)'")
                 transientValues[key] = newValue
             } else {

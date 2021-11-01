@@ -65,10 +65,10 @@ class IntegrationTests: XCTestCase {
             userDefault(SettingKey.debugName)
             userDefault(SettingKey.debugEnabled)
             userDefault(SettingKey.debugSlider)
-            readonly(SettingKey.jsonUrl, default: URL(string: "http://localhost")!)
-            readonly(SettingKey.jsonNumber, default: 0)
-            transient(SettingKey.transientDate, default: Date())
-            transient(SettingKey.transientString, default: "abc")
+            readonly(SettingKey.jsonUrl, default: .local(URL(string: "http://localhost")!))
+            readonly(SettingKey.jsonNumber, default: .local(0))
+            transient(SettingKey.transientDate, default: .local(Date()))
+            transient(SettingKey.transientString, default: .local("abc"))
         }
     }
 
