@@ -2,14 +2,14 @@
 
 [![.github/workflows/swift.yml](https://github.com/drekka/Locus/actions/workflows/swift.yml/badge.svg?branch=master)](https://github.com/drekka/Locus/actions/workflows/swift.yml)
 
-*Locus* is a an API designed to address a common problem encountered in many apps. How to manage the app's settings and coordinate between hard coded values, `Settings.bundle` preferences, `UserDefaults` and local or remote configuration files. A problem often made worse on enterprise apps where developers coming and going often implement a number of inconsistent implementations that can sometimes be quite Byzantine to understand. 
+*Locus* is a an API designed to address a common problem. Managing an app's settings from multiple sources such as hard coded values, `Settings.bundle` preferences, `UserDefaults` and local or remote configuration files. A problem that often crops up in enterprise apps where developers coming and going can result in multiple inconsistent and often Byzantine implementations.
 
 *Locus* is designed to address these issues by providing ...
 
-* A consistent and simple API for retrieving and updating settings regardless of their source.
-* Detection of miss-typed setting keys and updates to settings which should not occur. 
-* A set of base implementations for reading settings from `UserDefaults`, `Settings.bundle` preferences, local files, remote files and other locations that your app may need.
-* A Combine publisher for subscribing to updates.
+* A consistent and simple API for retrieving and updating settings from multiple sources.
+* Detection of miss-typed setting keys. 
+* Support for settings stored in `UserDefaults`, `Settings.bundle` preferences, local files, remote files and custom locations.
+* Combine publishing of setting updates.
 * The ability to use either `String` or enum keys.
 * A `@Setting` property wrapper for easy access.
 
@@ -17,26 +17,30 @@
 
 ## The Container
 
-*Locus* uses a central container for managing settings. This container is where you register settings, set default values and update them from external sources such as remote configuration files. You can use this container to access settings, or use the supplied `@Setting` property wrapper.
+*Locus* uses a central container for managing settings. This container is where default values are set, and where updates from external sources such as remote configuration files are processed. 
+
+Settings can be accessed directly from the container or via a supplied `@Setting` property wrapper.
+
+All settings in the app must be registered in the container before they can be accessed. This is to ensure that every setting has a *default value* and to also allow *Locus* to detect invalid keys.
 
 ## Current value vs Default values
 
-Similar to how `UserDefaults` has a registered default for a setting which is overridden by a user set current value, *Locus* has a *default value* and a *current value*. But unlike `UserDefaults` where settings can return optionals, *Locus* guarantees a value for every setting. If there is no *current value* for a setting, *Locus* will return the value set during registration, or the updated default set from an external sources such as the app's `Settings.bundle`, a remote configuration, or some other source.
+Similar to how `UserDefaults` has the concept of registered defaults, *Locus* has a *default value* as well as *current value* for any given setting. However unlike `UserDefaults` where settings return optionals, *Locus* guarantees a value. In other words, if there is no *current value*, it returns the *default value* set during registration. 
 
 ## Setting keys
 
 Every setting has a **key** to uniquely identify it to the container. A key can be either a `String` or an implementation of `RawRepresentable` where the `RawValue` type is `String`. In other words, a string enum. It doesn't matter which you choose to use, either, or, or both, *Locus* has overrides for every function so that it will know what to do.
 
+However I do recommend using enums.
+
 # Quick guide
 
 ## Step 1: Register your settings in your app startup
 
-The first thing to do is register the settings you need. This is done with the container where you register each setting with it's attributes and initial default value.
+First we need to register settings with the container. At a minimum this requires the setting's **Key** and a default value.
 
 ```swift
-// Somewhere in your startup. App delegate for example.
-
-// Enum based keys if you prefer them.
+// Enum based keys.
 enum SettingKey: String {
     case serverTimeout = "server.timeout"
     case serverUrl = "server.url"
@@ -49,11 +53,11 @@ SettingsContainer.shared.register {
 }
 ```
 
-As you can see the API can take setting keys as either `String` values or `RawRepresentable` string values. You'll also notice that the example `server.url` setting does not have a default value. That's because settings which have defaults loaded from `Setting.bundle` preferences don't need to specify a default when registering. Lots more on registering settings below.
+You'll notice that `server.url` in the above example does not have a default value. That's is because in our example, `server.url` is using a default value sourced from the app's `Settings.bundle`. Only keys set by the `userDefaults(...)` function and which have default values in the `Settings.bundle` can skip setting a default here. _Lots more on registering settings below._
 
-## Step 2: Add loaders to set default values
+## Step 2: Read in default values
 
-After registering settings in the container you *may* want to update their default values using one or more sources such as `Settings.bundle` files, remote configuration files, etc via types that implement `DefaultValueSource` like this:
+After registering settings in the container you *may* want to update their default values using one or more sources such as `Settings.bundle` files or files stored on a remote server. This is done via types that implement `DefaultValueSource` and typically you would call them like this:
 
 ```swift
 let settingsBundle = SettingsBundleDefaultValueSource()
@@ -64,12 +68,13 @@ SettingsContainer.shared.read(sources: settingsBundle) { error in
 
 ## Step 3: Access your settings
 
-You can retrieve values directly from the container like this:
+At this point your settings are all ready to go. You can retrieve values directly from the container like this:
 
 ```swift
 let url: URL = SettingsContainer.shared[SettingKey.serverUrl]
 ```
-or... use the provided property wrapper like this:
+
+or use the provided property wrapper like this:
 
 ```swift
 class SomeClass {
@@ -77,7 +82,6 @@ class SomeClass {
     @Setting(SettingKey.serverUrl)
     var serverUrl: URL
 
-    // ...
 }
 ```
 
@@ -96,9 +100,9 @@ SettingsContainer.shared.register {
 }
 ``` 
 
-### `SettingConfiguration`
+### SettingConfiguration
 
-All registrations are ultimately done with instances of `SettingConfiguration`. If you want to create them explicitly there are two default initialisers to choose from:
+All registrations are ultimately done with instances of `SettingConfiguration`. If you want to create them explicitly (as the first two in the above example do) there are two default initialisers you can use:
 
 ```swift
 init(_ key: String,
@@ -115,19 +119,19 @@ init<K>(_ key: K,
 
 Where:
 
-* **`key`** - Is the setting's unique key. It's the only difference between the two functions and can be either a `String` or a string `RawRepresentable` such as a string enum. 
-* **`persistence`** - If the app can set a *current value* for the setting and that value is stored:
+* **`key`** - Is the setting's unique key. It's the only difference between the two functions and can be either a `String` or a string `RawRepresentable` (string enum). 
+* **`persistence`** - Whether the app can update the *current value* for the setting and where that value is stored:
     * **`.none`** - The setting cannot have a *current value* set. This is the default. Note that this does not effect the updating of the setting's *default value*.
-    * **`.transient`** - The setting can have a *current value* set, but its transient in that it's only stored in memory and not preserved when the app is killed. 
-    * **`.userDefaults`** - The setting can have a *current value* set. That value will be set in `UserDefaults` and thus will be the *current value* if the app is restarted.
-* **`releasedLocked`** - If true, indicates that the setting can have a *current value* set in Debug builds, but not in Release builds. 
-* **`default`** - This is the default value for the settings that will be returned if not other *default* or *current* value is set. It must be one ofL
+    * **`.transient`** - The setting can have a *current value* set, but it's _"transient"_ in that it's only stored in memory and not preserved when the app is shutdown. 
+    * **`.userDefaults`** - The setting can have a *current value* set. That value will be set in `UserDefaults` and thus will be the *current value* from that point onwards.
+* **`releasedLocked`** - If true, indicates that the setting can have a *current value* set in Debug builds, but not in Release builds. This is to support settings which are basically read only, but need to be changed for testing purposes.
+* **`default`** - This is the initial _default_ value for the settings. It must be one of
   * **`.local(<value>)`** - A value stored in memory whilst the app is running.
-  * **`.userDefaults`** - The *default value* is expected to be registered in `UserDefaults`. Possibly by the `SettingBundleDefaultValueSource`.
+  * **`.userDefaults`** - The *default value* is expected to be sourced from the registered defaults domain in `UserDefaults`. It is expected that if settings of this type are registered, then the `SettingBundleDefaultValueSource` is used to load defaults into the registered defaults domain.
 
 ### Convenience functions
 
-Creating the `SettingConfiguration`s manually is the most expressive form of registration,however *Locus* also offers a range of convenience functions for common types of registrations:
+Creating the `SettingConfiguration`s manually is the most expressive form of registration, however there are quite a few common types of settings so *Locus* also offers a range of convenience functions:
 
 #### readonly(...)
 
@@ -158,37 +162,39 @@ func userDefault<K>(_ key: K, releaseLocked: Bool = false, default: Any? = nil) 
 
 ## Loading default values
 
-As mentioned above, once your settings are registered you can then run a variety of **`DefaultValueSource`** instances to set their default values. A source can be anything - preferences in a `Settings.bundle`, locally stored files, remotely stored files, or anything else you can think of. Because sources such as remotely stored files are inherently asynchronous to access, all the sources are executed in a separate background thread. 
+As mentioned, once your settings are registered you can then run a variety of **`DefaultValueSource`** instances to set or update their default values. A source can be anything - preferences in a `Settings.bundle`, locally stored files, remotely stored files, or anything else you can think of. Because sources such as remotely stored files are inherently asynchronous to access, all the sources are executed in a separate background thread. 
 
-For example, loading default values from a `Settings.bundle` and then a remote file might look something like this:
+For example, setting up to read default values from a `Settings.bundle` and then a remote file might look something like this:
 
 ```swift
 let settingsBundleSource = SettingsBundleDefaultValueSource()
 
-let fileUrl = URL(string: "https://appserver.com/configuration/config.json") 
+let url = URL(string: "https://appserver.com/configuration/config.json")!
 let remoteConfig = JSONDefaultValueSource(url: url) { json in
-    if let json = json as [String: Any?] {
-        return ["serverUrl": url]
+    if let json = json as [String: Any?], 
+       let serverURL = json["url"] as? String {
+        return ["serverUrl": serverURL]
     } 
     return [:]
 }
 
+// Now read the updates
 SettingsContainer.shared.read(sources: settingsBundleSource, remoteConfig) { error in
     // Check error and respond as necessary.
 }
 ```
 
-*Note: Locus executes each source sequentially on a background thread. This is a deliberate choice to ensure that the sources get to update the settings in the order you specify and also so that it can be triggered during app startup with out imposing any unnecessary delay.**
+*Note: Locus executes each source sequentially on a background thread. This is a deliberate choice to ensure that the sources store their new values in the order you specify.**
 
-### `SettingsBundleDefaultValueSource`
+Now lets take a look at the supplied sources.
 
-Probably the most commonly used default value source. It's pre-programmed to scan the `Settings.bundle` file in your app, read any preferences it finds and set their defaults as the settings default by registering them in the `UserDefaults` registration domain. By default it starts with the `Root.plist` file and drills down into child panes if it sees any. 
+### SettingsBundleDefaultValueSource
 
-#### `URLDefaultValueSource`
+Probably the most commonly used default value source. It's pre-programmed to scan the `Settings.bundle` file in your app, read any preferences it finds and register them in the `UserDefaults` registration domain. By default it starts with the `Root.plist` file and contains logic to also drill into child panes if any are present. 
 
-`URLDefaultValueSource` is a semi-complete source designed to access files on either a remote file server or local file system. Basically if you can refer to a file via a `URL` you can access it with this source. 
+#### URLDefaultValueSource
 
-It reads the `url` and passes the data to a `mapper` function. You will need to supply this as only your app knows how to interpret the data. For example:
+`URLDefaultValueSource` is a semi-complete source designed for accessing a file (local or remote) and passing it's contents to a `mapper` function for processing. You will need to supply the mapper. For example:
 
 ```swift
 let fileUrl = URL(string: "https://appserver.com/configuration/config.yaml") 
@@ -196,12 +202,12 @@ Let headers = [
               "Content-Type": "yaml",
               "auth": "security-token" 
               ]
-let remoteConfig = URLDefaultValueSource(url: url,
-                                         headers: headers) { data in
+let remoteConfigSource = URLDefaultValueSource(url: url,
+                                               headers: headers) { data in
     let yaml = ... // Convert data to a dictionary here
     var defaults: [String: Any] = [:] 
     if url = yaml["server-url"] {
-        defaults[SettingKey.serverUrl] = url
+        defaults[SettingKey.serverUrl.rawValue] = url
     } 
     return defaults
 }
@@ -213,9 +219,9 @@ let remoteConfig = URLDefaultValueSource(url: url,
 * **`headers`** - An optional dictionary of HTTP headers to add to the request.
 * **`mapper`** - A closure that will be used to read the returned `Data` and set the new default values. It's passed data read from the url and expected to return a `[String: Any]` dictionary or throw an error. 
 
-#### `JSONDefaultValueSource`
+#### JSONDefaultValueSource
 
-`JSONDefaultValueSource` is an extension of `URLDefaultValueSource` that does one extra thing. It assumes the data read from the URL will be valid JSON and deserialises before calling the mapper.
+`JSONDefaultValueSource` is an extension of `URLDefaultValueSource` that does one extra thing. It assumes the data read from the URL will be valid JSON and deserialises it before calling the mapper.
 
 ```swift
 let fileUrl = URL(string: "https://appserver.com/configuration/config.json") 
@@ -237,7 +243,7 @@ let remoteConfig = JSONDefaultValueSource(url: url,
 
 #### Rolling your own
 
-If you have a source of default values that doesn't match one of the pre-built class you can just roll your own. All you have to do is implement `DefaultValueSource`. The source for `URLDefaultValueSource` is a good example of doing this.
+If you have a source that doesn't match any of the pre-built classes you can just roll your own. All you have to do is implement `DefaultValueSource`. The source for `URLDefaultValueSource` is a good example of doing this.
 
 ## The `@Setting` property wrapper
 
@@ -256,11 +262,11 @@ class SomeClass {
 }
 ```
 
-The only argument is the key of the setting you want to connect to.
+The only argument is the key of the setting.
 
 ### Settings via the container
 
-`@Setting(...)` property wrappers access settings by talking directly to the container and you can do this as well if you want to access a setting in a situation where the property wrapper is not suitable. Here's some examples:
+`@Setting(...)` property wrappers aren't always convenient to user. So if you want to access a setting in a situation where the property wrapper is not suitable you can talk to the container directly. Here's some examples:
 
 ```swift
 let timeout: Double = SettingsContainer.shared[SettingKey.serverTimeout]
@@ -269,7 +275,7 @@ let serverUrl = SettingsContainer.shared["server.url"] as URL
 
 # Combine
 
-*Locus* is [Swift Combine](https://developer.apple.com/documentation/combine) friend with a publisher being made available through the `defaultValueUpdates`. So if you want to receive updates via a combine you can use it like this:
+*Locus* is [Swift Combine](https://developer.apple.com/documentation/combine) friendly and can provide settings updates through the `defaultValueUpdates` property. You can use it like this:
 
 ```swift
 let cancellable = SettingsContainer.shared.defaultValueUpdates
